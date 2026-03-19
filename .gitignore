@@ -5,3 +5,6 @@ backend/server
 .env.local
 node_modules/
 .next/
+node_modules/
+.next/
+out/
