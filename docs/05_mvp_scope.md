@@ -92,6 +92,53 @@ POST /v1/auth/signup     # Create account
 POST /v1/auth/login      # Get API key
 ```
 
+### Dashboard (Next.js)
+
+ランディングページとダッシュボードを同一Next.jsアプリで提供。
+
+**ページ構成:**
+
+```
+/                    # ランディングページ（LP）
+/docs                # APIドキュメント
+/login               # ログイン
+/signup              # サインアップ
+/dashboard           # ダッシュボードトップ（使用量サマリ）
+/dashboard/playground # ブラウザからeval実行（フォーム）
+/dashboard/evals     # eval履歴一覧
+/dashboard/evals/:id # eval結果詳細（横並び比較ビュー）
+/dashboard/keys      # APIキー管理
+/dashboard/settings  # アカウント設定 / プラン
+```
+
+**Playground画面 (MVP最重要UI):**
+- プロンプト入力テキストエリア
+- モデル選択チェックボックス（デフォルト3つON）
+- "Compare" ボタン → リアルタイムでストリーミング表示
+- 結果: カード横並び（モデル名 / 出力 / レイテンシ / コスト）
+
+**Eval詳細画面:**
+- 3カラム横並び比較ビュー
+- 各モデル: 出力テキスト + メタデータ（tokens, cost, latency）
+- 上部にサマリバー（fastest / cheapest / 自動ハイライト）
+
+**ダッシュボードトップ:**
+- 今月のeval数 / 残りクォータ
+- 直近のevals 5件
+- 月間コスト推移（簡易グラフ）
+
+### Docs (in-app)
+
+`/docs` 以下に組み込み。別サイト不要。
+
+```
+/docs                    # Overview + Quickstart
+/docs/api-reference      # 全エンドポイント仕様
+/docs/models             # 対応モデル一覧 + 料金表
+/docs/examples           # ユースケース別コード例
+/docs/sdks               # SDK（Post-MVP）
+```
+
 ## NOT in MVP (Post-Launch)
 
 - Auto-scoring / rubric-based evaluation
@@ -101,37 +148,45 @@ POST /v1/auth/login      # Get API key
 - Async mode with webhooks
 - Custom model endpoints (self-hosted LLMs)
 - Python/TypeScript SDK (use curl/fetch for MVP)
-- Dashboard UI (API-only for MVP)
 
 ## Architecture (MVP)
 
 ```
-Client
-  ↓ POST /v1/compare
-Go API (Echo)
-  ├→ Anthropic API
-  ├→ OpenAI API       (parallel goroutines)
-  └→ Google AI API
-  ↓ aggregate results
-PostgreSQL (store eval + usage)
+Browser / curl / SDK
   ↓
-Response JSON
+Caddy (reverse proxy, auto HTTPS)
+  ├→ /api/*  → Go API (Echo) :8082
+  │             ├→ Anthropic API
+  │             ├→ OpenAI API       (parallel goroutines)
+  │             └→ Google AI API
+  │             ↓
+  │           PostgreSQL (evals, users, usage)
+  │
+  └→ /*      → Next.js (Dashboard + Docs + LP) :3000
 ```
 
 ## Deploy
 
 - VPS ($10/month) — same Vultr instance as other services
-- PostgreSQL — reuse existing eastflow-db or create new DB
+- PostgreSQL — promptdiff DB on existing server
 - Reverse proxy: Caddy (auto HTTPS)
+  - `api.promptdiff.dev` → Go API
+  - `promptdiff.dev` → Next.js
 - Domain: promptdiff.dev (check availability)
 
 ## Timeline
 
-| Week | Deliverable |
-|------|------------|
-| Week 1 | API scaffold, LLM routing, /v1/compare endpoint, auth |
-| Week 2 | Usage tracking, rate limiting, landing page, deploy |
-| Week 2+ | First X post about it, Product Hunt prep |
+| Day | Deliverable |
+|-----|------------|
+| Day 1-2 | Go API scaffold, DB schema, auth (signup/login/API key) |
+| Day 3-4 | LLM routing (Anthropic/OpenAI/Google並列), /v1/compare |
+| Day 5-6 | Usage tracking, rate limiting, /v1/evals, /v1/models |
+| Day 7-8 | Next.js: LP, signup/login, dashboard skeleton |
+| Day 9-10 | Playground UI (フォーム→eval実行→横並び比較表示) |
+| Day 11-12 | Eval履歴, API key管理, 使用量ダッシュボード |
+| Day 13 | Docs (/docs, API reference, quickstart, examples) |
+| Day 14 | Deploy to VPS, ドメイン設定, 最終テスト |
+| Day 15+ | X投稿 (BIP), Product Hunt prep, 最初のユーザー獲得 |
 
 ## Success Criteria (90 days)
 
