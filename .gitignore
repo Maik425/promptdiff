@@ -1,0 +1,7 @@
+backend/bin/
+backend/server
+*.exe
+.env
+.env.local
+node_modules/
+.next/
