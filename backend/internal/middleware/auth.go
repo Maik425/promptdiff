@@ -5,11 +5,15 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Maik425/promptdiff/internal/model"
 	"github.com/Maik425/promptdiff/internal/store"
 	"github.com/labstack/echo/v4"
 )
 
-const userIDKey = "user_id"
+const (
+	userIDKey  = "user_id"
+	userObjKey = "user"
+)
 
 // APIKeyAuth returns an Echo middleware that validates Bearer tokens against
 // the API key stored in the database.
@@ -40,17 +44,26 @@ func APIKeyAuth(s store.Store) echo.MiddlewareFunc {
 			}
 
 			c.Set(userIDKey, user.ID)
+			c.Set(userObjKey, user)
 			return next(c)
 		}
 	}
 }
 
 // UserIDFromContext extracts the authenticated user's ID from the Echo context.
-// It panics if the middleware was not applied, which is a programming error.
 func UserIDFromContext(c echo.Context) string {
 	v := c.Get(userIDKey)
 	if v == nil {
 		panic("middleware.APIKeyAuth was not applied to this route")
 	}
 	return v.(string)
+}
+
+// UserFromContext extracts the full user object from the Echo context.
+func UserFromContext(c echo.Context) *model.User {
+	v := c.Get(userObjKey)
+	if v == nil {
+		return nil
+	}
+	return v.(*model.User)
 }

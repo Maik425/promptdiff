@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/Maik425/promptdiff/internal/middleware"
 	"github.com/Maik425/promptdiff/internal/model"
@@ -33,6 +35,18 @@ func (h *Handler) Compare(c echo.Context) error {
 	}
 
 	userID := middleware.UserIDFromContext(c)
+	user := middleware.UserFromContext(c)
+
+	// Quota check
+	month := time.Now().UTC().Format("2006-01")
+	usage, err := h.store.GetUsage(c.Request().Context(), userID, month)
+	if err == nil && usage != nil {
+		limit := user.Plan.QuotaLimit()
+		if usage.EvalCount >= limit {
+			return echo.NewHTTPError(http.StatusPaymentRequired,
+				fmt.Sprintf("monthly eval quota exceeded (%d/%d). Upgrade your plan.", usage.EvalCount, limit))
+		}
+	}
 
 	resp, err := h.evalSvc.RunComparison(c.Request().Context(), userID, req)
 	if err != nil {

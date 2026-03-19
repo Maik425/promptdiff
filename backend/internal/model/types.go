@@ -75,6 +75,18 @@ type Usage struct {
 	TotalCostUSD float64 `json:"total_cost_usd"`
 }
 
+// QuotaLimit returns the monthly eval limit for a plan.
+func (p Plan) QuotaLimit() int {
+	switch p {
+	case PlanPro:
+		return 5000
+	case PlanScale:
+		return 25000
+	default:
+		return 100
+	}
+}
+
 // CompareRequest is the JSON body for POST /v1/compare.
 type CompareRequest struct {
 	Prompt  string       `json:"prompt"`

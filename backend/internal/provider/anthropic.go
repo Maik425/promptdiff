@@ -19,8 +19,14 @@ const anthropicVersion = "2023-06-01"
 // anthropicPricing maps model IDs to their per-1M-token prices (USD).
 var anthropicPricing = map[string][2]float64{
 	// [inputPer1M, outputPer1M]
-	"claude-sonnet-4-5": {3.00, 15.00},
+	"claude-sonnet-4-6": {3.00, 15.00},
 	"claude-haiku-4-5":  {0.80, 4.00},
+}
+
+// anthropicModelMap maps our public model IDs to Anthropic's actual API model IDs.
+var anthropicModelMap = map[string]string{
+	"claude-sonnet-4-6": "claude-sonnet-4-6-20260320",
+	"claude-haiku-4-5":  "claude-haiku-4-5-20251001",
 }
 
 // AnthropicProvider implements Provider for Anthropic models.
@@ -44,8 +50,8 @@ func (a *AnthropicProvider) Name() string { return "anthropic" }
 func (a *AnthropicProvider) SupportedModels() []model.ModelInfo {
 	return []model.ModelInfo{
 		{
-			ID:          "claude-sonnet-4-5",
-			Name:        "Claude Sonnet 4.5",
+			ID:          "claude-sonnet-4-6",
+			Name:        "Claude Sonnet 4.6",
 			Provider:    "anthropic",
 			InputPer1M:  3.00,
 			OutputPer1M: 15.00,
@@ -107,8 +113,14 @@ func (a *AnthropicProvider) Complete(ctx context.Context, req CompletionRequest)
 		userContent = req.Input
 	}
 
+	// Map public model ID to Anthropic's actual API model ID
+	apiModel := req.Model
+	if mapped, ok := anthropicModelMap[req.Model]; ok {
+		apiModel = mapped
+	}
+
 	body := anthropicRequest{
-		Model:     req.Model,
+		Model:     apiModel,
 		MaxTokens: maxTokens,
 		System:    systemPrompt,
 		Messages: []anthropicMessage{
