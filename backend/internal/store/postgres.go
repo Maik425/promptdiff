@@ -64,12 +64,14 @@ func (s *PostgresStore) CreateUser(ctx context.Context, u *model.User) error {
 // GetUserByEmail implements Store.
 func (s *PostgresStore) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	const q = `
-		SELECT id, email, password_hash, api_key, plan, created_at
+		SELECT id, email, password_hash, api_key, plan, created_at,
+			COALESCE(stripe_customer_id, ''), COALESCE(has_payment_method, false), COALESCE(monthly_spend_limit_usd, 50)
 		FROM users WHERE email = $1`
 
 	u := &model.User{}
 	err := s.db.QueryRowContext(ctx, q, email).Scan(
 		&u.ID, &u.Email, &u.PasswordHash, &u.APIKey, &u.Plan, &u.CreatedAt,
+		&u.StripeCustomerID, &u.HasPaymentMethod, &u.MonthlySpendLimit,
 	)
 	if err == sql.ErrNoRows {
 		return nil, ErrNotFound
@@ -83,12 +85,14 @@ func (s *PostgresStore) GetUserByEmail(ctx context.Context, email string) (*mode
 // GetUserByAPIKey implements Store.
 func (s *PostgresStore) GetUserByAPIKey(ctx context.Context, apiKey string) (*model.User, error) {
 	const q = `
-		SELECT id, email, password_hash, api_key, plan, created_at
+		SELECT id, email, password_hash, api_key, plan, created_at,
+			COALESCE(stripe_customer_id, ''), COALESCE(has_payment_method, false), COALESCE(monthly_spend_limit_usd, 50)
 		FROM users WHERE api_key = $1`
 
 	u := &model.User{}
 	err := s.db.QueryRowContext(ctx, q, apiKey).Scan(
 		&u.ID, &u.Email, &u.PasswordHash, &u.APIKey, &u.Plan, &u.CreatedAt,
+		&u.StripeCustomerID, &u.HasPaymentMethod, &u.MonthlySpendLimit,
 	)
 	if err == sql.ErrNoRows {
 		return nil, ErrNotFound

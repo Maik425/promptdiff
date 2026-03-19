@@ -14,12 +14,15 @@ const (
 
 // User represents a registered user.
 type User struct {
-	ID           string    `json:"id"`
-	Email        string    `json:"email"`
-	PasswordHash string    `json:"-"`
-	APIKey       string    `json:"api_key"`
-	Plan         Plan      `json:"plan"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID                string    `json:"id"`
+	Email             string    `json:"email"`
+	PasswordHash      string    `json:"-"`
+	APIKey            string    `json:"api_key"`
+	Plan              Plan      `json:"plan"`
+	CreatedAt         time.Time `json:"created_at"`
+	StripeCustomerID  string    `json:"-"`
+	HasPaymentMethod  bool      `json:"has_payment_method"`
+	MonthlySpendLimit float64   `json:"monthly_spend_limit_usd"`
 }
 
 // TokenUsage holds token counts for a completion.
