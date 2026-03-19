@@ -167,12 +167,13 @@ Caddy (reverse proxy, auto HTTPS)
 
 ## Deploy
 
-- VPS ($10/month) — same Vultr instance as other services
-- PostgreSQL — promptdiff DB on existing server
-- Reverse proxy: Caddy (auto HTTPS)
-  - `api.promptdiff.dev` → Go API
-  - `promptdiff.dev` → Next.js
-- Domain: promptdiff.dev (check availability)
+- VPS ($10/month) — same Vultr instance (104.156.238.81)
+- PostgreSQL — `promptdiff` DB on eastflow-db (Docker)
+- Reverse proxy: nginx + Let's Encrypt
+  - `promptdiff.bizmarq.com/api/*` → Go API (:8082)
+  - `promptdiff.bizmarq.com/*` → Next.js (:3000)
+- Domain: promptdiff.bizmarq.com (Cloudflare DNS)
+- systemd: `promptdiff.service` (auto-restart)
 
 ## Timeline
 
