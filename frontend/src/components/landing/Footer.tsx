@@ -94,9 +94,20 @@ export function Footer() {
           <p className="text-xs text-muted-foreground">
             &copy; {new Date().getFullYear()} PromptDiff. All rights reserved.
           </p>
-          <p className="text-xs text-muted-foreground">
-            Built for developers who care about model quality and cost.
-          </p>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/terms"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Terms of Service
+            </Link>
+            <Link
+              href="/privacy"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Privacy Policy
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
