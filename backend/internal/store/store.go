@@ -33,6 +33,12 @@ type Store interface {
 	UpdateStripeCustomer(ctx context.Context, userID, stripeCustomerID string) error
 	SetPaymentMethod(ctx context.Context, userID string, hasPaymentMethod bool) error
 
+	// Settings operations
+	UpdateSpendLimit(ctx context.Context, userID string, limit float64) error
+	UpdatePassword(ctx context.Context, userID string, passwordHash string) error
+	RegenerateAPIKey(ctx context.Context, userID string, newKey string) error
+	DeleteUser(ctx context.Context, userID string) error
+
 	// Close releases the database connection pool.
 	Close() error
 }

@@ -185,6 +185,36 @@ export async function getUsage(): Promise<UsageResponse> {
   return apiFetch<UsageResponse>("/v1/usage");
 }
 
+// Settings
+export async function updateSpendLimit(limit: number): Promise<{ monthly_spend_limit: number }> {
+  return apiFetch<{ monthly_spend_limit: number }>('/v1/settings/spend-limit', {
+    method: 'PUT',
+    body: JSON.stringify({ monthly_spend_limit: limit }),
+  });
+}
+
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>('/v1/settings/password', {
+    method: 'PUT',
+    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+  });
+}
+
+export async function regenerateApiKey(): Promise<{ api_key: string }> {
+  return apiFetch<{ api_key: string }>('/v1/settings/regenerate-key', {
+    method: 'POST',
+  });
+}
+
+export async function deleteAccount(): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>('/v1/settings/account', {
+    method: 'DELETE',
+  });
+}
+
 // Auth helpers
 export function getStoredApiKey(): string | null {
   if (typeof window === "undefined") return null;

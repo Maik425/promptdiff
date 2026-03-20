@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { getStoredApiKey } from "@/lib/api";
+import { getStoredApiKey, storeApiKey, regenerateApiKey } from "@/lib/api";
 import { copyToClipboard } from "@/lib/utils";
 import { cn } from "@/lib/utils";
-import { Copy, Check, Eye, EyeOff, Key, RefreshCw, AlertCircle } from "lucide-react";
+import { Copy, Check, Eye, EyeOff, Key, RefreshCw, AlertCircle, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 
 function maskKey(key: string): string {
@@ -21,6 +21,12 @@ export default function KeysPage() {
   const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // Regenerate flow
+  const [showRegenerateDialog, setShowRegenerateDialog] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const [newKeyResult, setNewKeyResult] = useState<string | null>(null);
+  const [newKeyCopied, setNewKeyCopied] = useState(false);
+
   useEffect(() => {
     setApiKey(getStoredApiKey());
   }, []);
@@ -31,6 +37,30 @@ export default function KeysPage() {
     setCopied(true);
     toast.success("API key copied");
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleRegenerate = async () => {
+    setRegenerating(true);
+    try {
+      const data = await regenerateApiKey();
+      storeApiKey(data.api_key);
+      setApiKey(data.api_key);
+      setNewKeyResult(data.api_key);
+      setShowRegenerateDialog(false);
+      setRevealed(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to regenerate API key");
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
+  const handleCopyNewKey = async () => {
+    if (!newKeyResult) return;
+    await copyToClipboard(newKeyResult);
+    setNewKeyCopied(true);
+    toast.success("New API key copied");
+    setTimeout(() => setNewKeyCopied(false), 2000);
   };
 
   return (
@@ -106,6 +136,39 @@ export default function KeysPage() {
           </p>
         </div>
 
+        {/* New key banner — shown after a successful regeneration */}
+        {newKeyResult && (
+          <div className="p-4 border border-emerald-200 rounded-lg bg-emerald-50 space-y-2">
+            <p className="text-sm font-medium text-emerald-800 flex items-center gap-1.5">
+              <Check className="w-4 h-4" />
+              New API key generated — copy it now
+            </p>
+            <p className="text-xs text-emerald-700">
+              This is the only time it will be displayed in full.
+            </p>
+            <div className="flex items-center gap-2">
+              <Input
+                value={newKeyResult}
+                readOnly
+                className="font-mono text-sm bg-white border-emerald-300"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyNewKey}
+                className="gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-100 flex-shrink-0"
+              >
+                {newKeyCopied ? (
+                  <Check className="w-3.5 h-3.5" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
+                {newKeyCopied ? "Copied!" : "Copy"}
+              </Button>
+            </div>
+          </div>
+        )}
+
         <Separator />
 
         {/* Usage hint */}
@@ -124,7 +187,7 @@ export default function KeysPage() {
 
         <Separator />
 
-        {/* Regenerate (placeholder) */}
+        {/* Regenerate */}
         <div>
           <div className="flex items-center justify-between">
             <div>
@@ -138,13 +201,47 @@ export default function KeysPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => toast.info("Key regeneration coming soon")}
+              onClick={() => {
+                setShowRegenerateDialog(true);
+                setNewKeyResult(null);
+              }}
               className="gap-1.5 text-muted-foreground"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               Regenerate
             </Button>
           </div>
+
+          {showRegenerateDialog && (
+            <div className="mt-4 p-4 border border-amber-200 rounded-lg bg-amber-50 space-y-3">
+              <p className="text-sm font-medium text-amber-800 flex items-center gap-1.5">
+                <ShieldAlert className="w-4 h-4" />
+                This will invalidate your current key
+              </p>
+              <p className="text-xs text-amber-700">
+                Any integrations using the current key will stop working immediately.
+                Make sure you update them with the new key.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={handleRegenerate}
+                  disabled={regenerating}
+                  className="bg-amber-600 hover:bg-amber-700 text-white"
+                >
+                  {regenerating ? "Regenerating..." : "Yes, regenerate key"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowRegenerateDialog(false)}
+                  disabled={regenerating}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

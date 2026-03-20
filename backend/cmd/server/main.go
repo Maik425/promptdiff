@@ -90,7 +90,7 @@ func run() error {
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*"},
-		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodOptions},
+		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
 		AllowHeaders: []string{echo.HeaderContentType, echo.HeaderAuthorization},
 	}))
 
@@ -134,6 +134,13 @@ func run() error {
 	auth.GET("/evals/:id", h.GetEval, generalRL)
 	auth.GET("/models", h.ListModels, generalRL)
 	auth.GET("/usage", h.GetUsage, generalRL)
+
+	// Settings routes.
+	settings := auth.Group("/settings")
+	settings.PUT("/spend-limit", h.UpdateSpendLimit, generalRL)
+	settings.PUT("/password", h.UpdatePassword, generalRL)
+	settings.POST("/regenerate-key", h.RegenerateAPIKey, generalRL)
+	settings.DELETE("/account", h.DeleteAccount, generalRL)
 
 	// Billing routes — only registered when Stripe is configured.
 	// Webhook is public (Stripe signs it); checkout-session and status require auth.

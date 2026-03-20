@@ -410,6 +410,63 @@ func (s *PostgresStore) SetPaymentMethod(ctx context.Context, userID string, has
 	return nil
 }
 
+// UpdateSpendLimit implements Store.
+func (s *PostgresStore) UpdateSpendLimit(ctx context.Context, userID string, limit float64) error {
+	const q = `UPDATE users SET monthly_spend_limit_usd = $1 WHERE id = $2`
+	_, err := s.db.ExecContext(ctx, q, limit, userID)
+	if err != nil {
+		return fmt.Errorf("store: update spend limit: %w", err)
+	}
+	return nil
+}
+
+// UpdatePassword implements Store.
+func (s *PostgresStore) UpdatePassword(ctx context.Context, userID string, passwordHash string) error {
+	const q = `UPDATE users SET password_hash = $1 WHERE id = $2`
+	_, err := s.db.ExecContext(ctx, q, passwordHash, userID)
+	if err != nil {
+		return fmt.Errorf("store: update password: %w", err)
+	}
+	return nil
+}
+
+// RegenerateAPIKey implements Store.
+func (s *PostgresStore) RegenerateAPIKey(ctx context.Context, userID string, newKey string) error {
+	const q = `UPDATE users SET api_key = $1 WHERE id = $2`
+	_, err := s.db.ExecContext(ctx, q, newKey, userID)
+	if err != nil {
+		return fmt.Errorf("store: regenerate api key: %w", err)
+	}
+	return nil
+}
+
+// DeleteUser implements Store.
+// It deletes all user-owned records then removes the user row, all within a
+// single transaction so the operation is atomic.
+func (s *PostgresStore) DeleteUser(ctx context.Context, userID string) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("store: delete user begin tx: %w", err)
+	}
+	defer tx.Rollback() //nolint:errcheck
+
+	tables := []string{"evals", "usage", "billing_events", "invoices"}
+	for _, t := range tables {
+		if _, err := tx.ExecContext(ctx, `DELETE FROM `+t+` WHERE user_id = $1`, userID); err != nil {
+			return fmt.Errorf("store: delete user data from %s: %w", t, err)
+		}
+	}
+
+	if _, err := tx.ExecContext(ctx, `DELETE FROM users WHERE id = $1`, userID); err != nil {
+		return fmt.Errorf("store: delete user row: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("store: delete user commit: %w", err)
+	}
+	return nil
+}
+
 // isUniqueViolation returns true when err is a PostgreSQL unique constraint error.
 func isUniqueViolation(err error) bool {
 	if pqErr, ok := err.(*pq.Error); ok {
