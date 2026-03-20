@@ -7,14 +7,13 @@ interface PageProps {
 }
 
 const QUICKSTART_PY = [
-  "import promptdiff",
+  "from promptdiff import PromptDiff",
   "",
-  'client = promptdiff.Client(api_key="pd_your_api_key")',
+  'pd = PromptDiff(api_key="pd_your_api_key")',
   "",
-  "result = client.compare(",
+  "result = pd.compare(",
   '    prompt="Explain async/await in JavaScript.",',
-  '    models=["gpt-4o-mini", "claude-3-haiku", "gemini-1.5-flash"],',
-  '    options={"temperature": 0.7, "max_tokens": 300}',
+  '    models=["gpt-4o-mini", "claude-haiku-4-5", "gemini-2.5-flash"],',
   ")",
   "",
   "for r in result.results:",
@@ -23,14 +22,32 @@ const QUICKSTART_PY = [
   "    print()",
 ].join("\n");
 
+const QUICKSTART_TS = [
+  "import { PromptDiff } from 'promptdiff';",
+  "",
+  "const pd = new PromptDiff({ apiKey: 'pd_your_api_key' });",
+  "",
+  "const result = await pd.compare({",
+  "  prompt: 'Explain async/await in JavaScript.',",
+  "  models: ['gpt-4o-mini', 'claude-haiku-4-5', 'gemini-2.5-flash'],",
+  "  temperature: 0.7,",
+  "  maxTokens: 300,",
+  "});",
+  "",
+  "for (const r of result.results) {",
+  "  console.log(r.model, r.latencyMs, r.costUsd);",
+  "  console.log(r.output.slice(0, 100));",
+  "}",
+].join("\n");
+
 const EXAMPLES_PY = [
-  "import promptdiff",
+  "from promptdiff import PromptDiff",
   "",
-  'client = promptdiff.Client(api_key="pd_...")',
+  'pd = PromptDiff(api_key="pd_your_api_key")',
   "",
-  "result = client.compare(",
+  "result = pd.compare(",
   '    prompt="Classify this text as spam or not: {input}",',
-  '    models=["gpt-4o-mini", "claude-3-haiku", "gemini-1.5-flash"],',
+  '    models=["gpt-4o-mini", "claude-haiku-4-5", "gemini-2.5-flash", "grok-3-mini"],',
   '    input="Congratulations! You have won a prize."',
   ")",
   "",
@@ -51,7 +68,7 @@ const EXAMPLES_TS = [
   "    },",
   "    body: JSON.stringify({",
   '      prompt: "Explain closures in JavaScript briefly.",',
-  '      models: ["gpt-4o-mini", "claude-3-haiku"],',
+  '      models: ["gpt-4o-mini", "claude-haiku-4-5"],',
   "      options: { temperature: 0.5, max_tokens: 200 },",
   "    }),",
   "  }",
@@ -107,10 +124,10 @@ const docsContent: Record<string, { title: string; content: React.ReactNode }> =
               filename="quickstart.sh"
               code={`curl -X POST https://promptdiff.bizmarq.com/api/v1/compare \\
   -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer pd_your_api_key" \\
+  -H "Authorization: Bearer pd_your_api_key_here" \\
   -d '{
     "prompt": "What is the capital of France?",
-    "models": ["gpt-4o-mini", "claude-3-haiku"]
+    "models": ["gpt-4o-mini", "claude-haiku-4-5"]
   }'`}
             />
           </div>
@@ -160,6 +177,17 @@ const docsContent: Record<string, { title: string; content: React.ReactNode }> =
               code={QUICKSTART_PY}
             />
           </div>
+
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-foreground">
+              Using the TypeScript SDK
+            </h2>
+            <CodeBlock
+              language="typescript"
+              filename="example.ts"
+              code={QUICKSTART_TS}
+            />
+          </div>
         </article>
       ),
     },
@@ -189,7 +217,7 @@ const docsContent: Record<string, { title: string; content: React.ReactNode }> =
               unique identifier.
             </p>
             <CodeBlock
-              code="pd_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
+              code="pd_your_api_key_here"
               language="text"
             />
           </div>
@@ -200,7 +228,7 @@ const docsContent: Record<string, { title: string; content: React.ReactNode }> =
             </h2>
             <CodeBlock
               language="http"
-              code="Authorization: Bearer pd_your_api_key"
+              code="Authorization: Bearer pd_your_api_key_here"
             />
           </div>
 
@@ -227,7 +255,7 @@ const docsContent: Record<string, { title: string; content: React.ReactNode }> =
             <p className="text-xs text-amber-700">
               Never expose your API key in client-side code or commit it to
               version control. Use environment variables:{" "}
-              <code className="font-mono">PROMPTDIFF_API_KEY=pd_...</code>
+              <code className="font-mono">PROMPTDIFF_API_KEY=pd_your_api_key_here</code>
             </p>
           </div>
         </article>
@@ -331,11 +359,11 @@ const docsContent: Record<string, { title: string; content: React.ReactNode }> =
               language="bash"
               code={`curl -X POST https://promptdiff.bizmarq.com/api/v1/compare \\
   -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer pd_your_api_key" \\
+  -H "Authorization: Bearer pd_your_api_key_here" \\
   -d '{
     "prompt": "Summarize: {input}",
     "input": "The quick brown fox jumps over the lazy dog.",
-    "models": ["gpt-4o-mini", "claude-3-haiku", "gemini-1.5-flash"],
+    "models": ["gpt-4o-mini", "claude-haiku-4-5", "gemini-2.5-flash"],
     "options": {
       "temperature": 0.3,
       "max_tokens": 200
@@ -358,8 +386,9 @@ const docsContent: Record<string, { title: string; content: React.ReactNode }> =
               Models & Pricing
             </h1>
             <p className="text-base text-muted-foreground leading-relaxed">
-              PromptDiff charges <strong>$0.005 per eval</strong> (free for
-              first 100/month). Underlying LLM costs are passed through at cost.
+              PromptDiff charges{" "}
+              <strong>LLM API cost + 40% margin</strong>. Free tier: 100
+              evals/month with mini models (no card required).
             </p>
           </div>
 
@@ -384,6 +413,18 @@ const docsContent: Record<string, { title: string; content: React.ReactNode }> =
               <tbody>
                 {[
                   {
+                    model: "claude-sonnet-4-6",
+                    provider: "Anthropic",
+                    input: "$3.00",
+                    output: "$15.00",
+                  },
+                  {
+                    model: "claude-haiku-4-5",
+                    provider: "Anthropic",
+                    input: "$0.80",
+                    output: "$4.00",
+                  },
+                  {
                     model: "gpt-4o",
                     provider: "OpenAI",
                     input: "$5.00",
@@ -396,40 +437,28 @@ const docsContent: Record<string, { title: string; content: React.ReactNode }> =
                     output: "$0.60",
                   },
                   {
-                    model: "claude-3-5-sonnet",
-                    provider: "Anthropic",
+                    model: "gemini-2.5-pro",
+                    provider: "Google",
+                    input: "$1.25",
+                    output: "$10.00",
+                  },
+                  {
+                    model: "gemini-2.5-flash",
+                    provider: "Google",
+                    input: "$0.15",
+                    output: "$0.60",
+                  },
+                  {
+                    model: "grok-3",
+                    provider: "xAI",
                     input: "$3.00",
                     output: "$15.00",
                   },
                   {
-                    model: "claude-3-haiku",
-                    provider: "Anthropic",
-                    input: "$0.25",
-                    output: "$1.25",
-                  },
-                  {
-                    model: "gemini-1.5-pro",
-                    provider: "Google",
-                    input: "$3.50",
-                    output: "$10.50",
-                  },
-                  {
-                    model: "gemini-1.5-flash",
-                    provider: "Google",
-                    input: "$0.075",
-                    output: "$0.30",
-                  },
-                  {
-                    model: "llama-3.1-70b",
-                    provider: "Meta",
-                    input: "$0.59",
-                    output: "$0.79",
-                  },
-                  {
-                    model: "mistral-large",
-                    provider: "Mistral",
-                    input: "$4.00",
-                    output: "$12.00",
+                    model: "grok-3-mini",
+                    provider: "xAI",
+                    input: "$0.30",
+                    output: "$0.50",
                   },
                 ].map((m, i) => (
                   <tr
@@ -462,7 +491,9 @@ const docsContent: Record<string, { title: string; content: React.ReactNode }> =
               Prices above reflect underlying LLM provider costs and may change.
               Always use{" "}
               <code className="font-mono">GET /v1/models</code> for current
-              pricing. PromptDiff adds $0.005/eval after your free tier.
+              pricing. PromptDiff charges LLM API cost + 40% margin. Free tier
+              includes 100 evals/month with mini models — no credit card
+              required.
             </p>
           </div>
         </article>
@@ -505,10 +536,10 @@ const docsContent: Record<string, { title: string; content: React.ReactNode }> =
             <CodeBlock
               language="bash"
               code={`curl -X POST https://promptdiff.bizmarq.com/api/v1/compare \\
-  -H "Authorization: Bearer pd_your_key" \\
+  -H "Authorization: Bearer pd_your_api_key_here" \\
   -d '{
     "prompt": "Respond with exactly one word: yes",
-    "models": ["gpt-4o-mini", "claude-3-haiku", "gemini-1.5-flash"],
+    "models": ["gpt-4o-mini", "claude-haiku-4-5", "gemini-2.5-flash", "grok-3-mini"],
     "options": { "max_tokens": 5 }
   }'`}
             />
@@ -536,6 +567,7 @@ const docsToc: Record<string, Array<{ label: string; id: string }>> = {
     { label: "Make your first comparison", id: "make-your-first-comparison" },
     { label: "Parse the results", id: "parse-the-results" },
     { label: "Using the Python SDK", id: "using-the-python-sdk" },
+    { label: "Using the TypeScript SDK", id: "using-the-typescript-sdk" },
   ],
   authentication: [
     { label: "API Key format", id: "api-key-format" },
