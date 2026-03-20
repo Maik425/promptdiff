@@ -107,19 +107,19 @@ export default function DashboardPage() {
         <StatCard
           title="Free remaining"
           value={loading ? "—" : freeRemaining.toString()}
-          subtitle={`of ${usage?.pricing.free_tier_limit ?? 100} free/mo`}
+          subtitle={`of ${usage?.pricing?.free_quota ?? 100} free/mo`}
           icon={Zap}
           loading={loading}
         />
         <StatCard
-          title="Current tier"
-          value={loading ? "—" : (usage?.current_tier ?? "Free")}
+          title="Plan"
+          value={loading ? "—" : (usage?.plan ?? "free")}
           icon={BarChart3}
           loading={loading}
         />
         <StatCard
-          title="Rate per eval"
-          value={loading ? "—" : (usage?.current_rate_usd === 0 ? "Free" : formatCost(usage?.current_rate_usd ?? 0))}
+          title="Total charged"
+          value={loading ? "—" : `$${(usage?.total_charge_usd ?? 0).toFixed(4)}`}
           icon={DollarSign}
           loading={loading}
         />

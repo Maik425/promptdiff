@@ -36,7 +36,6 @@ func (h *Handler) GetUsage(c echo.Context) error {
 		freeRemaining = 0
 	}
 
-	// Free model list
 	freeModels := make([]string, 0, len(service.FreeModels))
 	for m := range service.FreeModels {
 		freeModels = append(freeModels, m)
@@ -44,12 +43,16 @@ func (h *Handler) GetUsage(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"user_id":              userID,
+		"email":                user.Email,
+		"created_at":           user.CreatedAt.Format(time.RFC3339),
+		"auth_provider":        user.AuthProvider,
 		"month":                month,
 		"eval_count":           evalCount,
 		"total_charge_usd":     totalCharge,
 		"has_payment_method":   user.HasPaymentMethod,
 		"monthly_spend_limit":  user.MonthlySpendLimit,
 		"free_evals_remaining": freeRemaining,
+		"plan":                 string(user.Plan),
 		"pricing": map[string]interface{}{
 			"model":       "pass-through",
 			"description": "LLM API cost + 40% margin",

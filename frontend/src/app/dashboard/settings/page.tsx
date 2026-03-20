@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { getUsage, type UsageResponse } from "@/lib/api";
-import { formatDate } from "@/lib/utils";
+import { getUsage, apiFetch, type UsageResponse } from "@/lib/api";
 import {
   User,
   CreditCard,
@@ -24,36 +23,51 @@ export default function SettingsPage() {
   useEffect(() => {
     getUsage()
       .then(setUsage)
-      .catch(() => {
-        // Silently handle — show placeholder data
-      })
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  const email =
-    usage?.email ??
-    (typeof window !== "undefined"
-      ? localStorage.getItem("pd_email") ?? "you@example.com"
-      : "you@example.com");
-
+  const email = usage?.email ?? "—";
   const createdAt = usage?.created_at ?? null;
-  const plan = usage?.current_tier ?? "Free";
+  const plan = usage?.plan ?? "free";
+  const authProvider = usage?.auth_provider ?? "email";
   const hasPayment = usage?.has_payment_method ?? false;
-  const spendLimit = usage?.monthly_spend_limit_usd ?? 50;
+  const spendLimit = usage?.monthly_spend_limit ?? 0;
 
-  const handleAddPaymentMethod = () => {
-    // Placeholder — will call POST /v1/billing/checkout-session
-    toast.info("Billing integration coming soon. Stay tuned!");
+  const handleAddPaymentMethod = async () => {
+    try {
+      const data = await apiFetch<{ checkout_url: string }>(
+        "/v1/billing/checkout-session",
+        { method: "POST" }
+      );
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to create checkout session"
+      );
+    }
   };
 
   const handleDeleteAccount = () => {
-    // Placeholder — not implemented
     toast.error("Account deletion is not yet available. Contact support.");
+  };
+
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch {
+      return "—";
+    }
   };
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Settings
@@ -64,7 +78,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="space-y-6">
-        {/* Account info */}
+        {/* Account */}
         <Card className="border-border shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -81,6 +95,16 @@ export default function SettingsPage() {
                 <span className="text-sm font-medium text-foreground">
                   {email}
                 </span>
+              )}
+            </div>
+            <div className="flex items-center justify-between py-2 border-b border-border">
+              <span className="text-sm text-muted-foreground">Sign-in method</span>
+              {loading ? (
+                <Skeleton className="h-5 w-16" />
+              ) : (
+                <Badge variant="secondary" className="capitalize">
+                  {authProvider === "google" ? "Google" : "Email & Password"}
+                </Badge>
               )}
             </div>
             <div className="flex items-center justify-between py-2 border-b border-border">
@@ -117,21 +141,14 @@ export default function SettingsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between py-2 border-b border-border">
-              <span className="text-sm text-muted-foreground">Current plan</span>
-              <span className="text-sm font-medium text-foreground">
-                {loading ? <Skeleton className="h-4 w-12 inline-block" /> : plan}
-              </span>
-            </div>
-
             <div className="flex items-start sm:items-center justify-between py-2 border-b border-border gap-4 flex-col sm:flex-row">
               <div>
                 <p className="text-sm text-muted-foreground">Payment method</p>
                 {!loading && (
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {hasPayment
-                      ? "Your payment method is active."
-                      : "No payment method on file."}
+                      ? "Your payment method is active. You can use all models."
+                      : "Add a payment method to use premium models and exceed the free quota."}
                   </p>
                 )}
               </div>
@@ -156,23 +173,32 @@ export default function SettingsPage() {
               )}
             </div>
 
-            <div className="flex items-center justify-between py-2">
-              <div>
-                <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                  <DollarSign className="w-3.5 h-3.5" />
-                  Monthly spend limit
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  You will not be charged beyond this amount.
-                </p>
+            {hasPayment && (
+              <div className="flex items-center justify-between py-2 border-b border-border">
+                <div>
+                  <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                    <DollarSign className="w-3.5 h-3.5" />
+                    Monthly spend limit
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    You will not be charged beyond this amount per month.
+                  </p>
+                </div>
+                {loading ? (
+                  <Skeleton className="h-4 w-12" />
+                ) : (
+                  <span className="text-sm font-mono font-semibold text-foreground">
+                    ${spendLimit.toFixed(2)}
+                  </span>
+                )}
               </div>
-              {loading ? (
-                <Skeleton className="h-4 w-12" />
-              ) : (
-                <span className="text-sm font-mono font-semibold text-foreground">
-                  ${spendLimit.toFixed(2)}
-                </span>
-              )}
+            )}
+
+            <div className="flex items-center justify-between py-2">
+              <span className="text-sm text-muted-foreground">Pricing model</span>
+              <span className="text-sm text-foreground">
+                LLM cost + 40% margin
+              </span>
             </div>
           </CardContent>
         </Card>

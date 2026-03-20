@@ -161,18 +161,23 @@ export async function getEval(id: string): Promise<CompareResponse & { prompt: s
 
 // Usage
 export interface UsageResponse {
+  user_id: string;
+  email: string;
+  created_at: string;
+  auth_provider: string;
+  month: string;
   eval_count: number;
+  total_charge_usd: number;
+  has_payment_method: boolean;
+  monthly_spend_limit: number;
   free_evals_remaining: number;
-  current_tier: string;
-  current_rate_usd: number;
-  has_payment_method?: boolean;
-  email?: string;
-  created_at?: string;
-  monthly_spend_limit_usd?: number;
+  plan: string;
   pricing: {
-    free_tier_limit: number;
-    paid_rate_per_eval: number;
-    volume_discounts?: Array<{ threshold: number; rate: number }>;
+    model: string;
+    description: string;
+    margin: number;
+    free_quota: number;
+    free_models: string[];
   };
 }
 
