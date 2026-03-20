@@ -11,8 +11,6 @@ import (
 )
 
 // Compare handles POST /v1/compare.
-// It validates the request, checks billing/quota, runs all models in parallel,
-// and returns structured comparison results.
 func (h *Handler) Compare(c echo.Context) error {
 	var req model.CompareRequest
 	if err := c.Bind(&req); err != nil {
@@ -27,11 +25,11 @@ func (h *Handler) Compare(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "at least one model is required")
 	}
 
-	if len(req.Models) > 5 {
-		return echo.NewHTTPError(http.StatusBadRequest, "maximum 5 models per eval")
+	if len(req.Models) > 8 {
+		return echo.NewHTTPError(http.StatusBadRequest, "maximum 8 models per eval")
 	}
 
-	// Validate that all requested models are supported before doing any work.
+	// Validate models exist
 	for _, m := range req.Models {
 		if _, ok := h.registry.Lookup(m); !ok {
 			return echo.NewHTTPError(http.StatusBadRequest, "unsupported model: "+m)
@@ -51,7 +49,7 @@ func (h *Handler) Compare(c echo.Context) error {
 		monthlySpend = usage.TotalCostUSD
 	}
 
-	// Hybrid billing check
+	// Billing check
 	allowed, reason := service.CanRunEval(
 		evalCount,
 		user.HasPaymentMethod,
@@ -62,7 +60,17 @@ func (h *Handler) Compare(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusPaymentRequired, reason)
 	}
 
-	resp, err := h.evalSvc.RunComparison(c.Request().Context(), userID, req)
+	// Free tier: restrict to cheap models only
+	if !user.HasPaymentMethod {
+		for _, m := range req.Models {
+			if !service.IsFreeModel(m) {
+				return echo.NewHTTPError(http.StatusPaymentRequired,
+					"model "+m+" requires a payment method. Free tier supports: claude-haiku-4-5, gpt-4o-mini, gemini-2.5-flash, grok-3-mini")
+			}
+		}
+	}
+
+	resp, err := h.evalSvc.RunComparison(c.Request().Context(), userID, req, evalCount, user.HasPaymentMethod)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

@@ -29,8 +29,9 @@ func NewEvalService(registry *provider.Registry, store store.Store) *EvalService
 }
 
 // RunComparison executes the given models in parallel, collects results,
-// computes metadata, stores the eval, and updates the user's usage counters.
-func (s *EvalService) RunComparison(ctx context.Context, userID string, req model.CompareRequest) (*model.CompareResponse, error) {
+// computes metadata (including user charge with margin), stores the eval,
+// and updates the user's usage counters.
+func (s *EvalService) RunComparison(ctx context.Context, userID string, req model.CompareRequest, monthlyEvalCount int, hasPaymentMethod bool) (*model.CompareResponse, error) {
 	// Validate that every requested model is supported.
 	for _, modelID := range req.Models {
 		if _, ok := s.registry.Lookup(modelID); !ok {
@@ -104,8 +105,9 @@ func (s *EvalService) RunComparison(ctx context.Context, userID string, req mode
 		ordered[ir.idx] = ir.res
 	}
 
-	// Compute aggregate metadata.
+	// Compute aggregate metadata with user charge.
 	meta := computeMeta(ordered)
+	meta.UserChargeUSD = UserCharge(meta.TotalCostUSD, monthlyEvalCount, hasPaymentMethod)
 
 	// Build and persist the eval record.
 	evalID := generateEvalID()
@@ -126,9 +128,9 @@ func (s *EvalService) RunComparison(ctx context.Context, userID string, req mode
 		return nil, fmt.Errorf("service: store eval: %w", err)
 	}
 
-	// Update monthly usage (best-effort — don't fail the request on counter error).
+	// Update monthly usage with user charge amount (not LLM cost).
 	month := time.Now().UTC().Format("2006-01")
-	_ = s.store.UpsertUsage(ctx, userID, month, 1, meta.TotalCostUSD)
+	_ = s.store.UpsertUsage(ctx, userID, month, 1, meta.UserChargeUSD)
 
 	return &model.CompareResponse{
 		EvalID:  evalID,

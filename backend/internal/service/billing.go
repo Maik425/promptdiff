@@ -1,39 +1,30 @@
-// Package service — billing logic for hybrid pricing.
+// Package service — billing logic for pass-through pricing.
 package service
 
-// Pricing tiers and rates for the hybrid model.
-// Free: 100 evals/month, no card required.
-// Pay-as-you-go: card required, volume discounts.
+// Pricing model: LLM API cost × (1 + Margin) = user charge.
+// Free tier: 100 evals/month, restricted to cheap models only.
 
 const (
 	FreeQuota = 100
-
-	// Per-eval pricing (USD)
-	RateStandard  = 0.005 // 1 - 5,000 evals
-	RateVolume5K  = 0.004 // 5,001 - 25,000
-	RateVolume25K = 0.003 // 25,001+
+	Margin    = 0.40 // 40% markup on LLM API cost
 )
 
-// PricingTier returns the tier name and per-eval rate based on monthly eval count.
-func PricingTier(monthlyEvalCount int) (tier string, rate float64) {
-	switch {
-	case monthlyEvalCount >= 25000:
-		return "volume_25k", RateVolume25K
-	case monthlyEvalCount >= 5000:
-		return "volume_5k", RateVolume5K
-	default:
-		return "standard", RateStandard
-	}
+// FreeModels lists model IDs available on the free tier.
+// These are the cheapest models from each provider.
+var FreeModels = map[string]bool{
+	"claude-haiku-4-5":  true,
+	"gpt-4o-mini":       true,
+	"gemini-2.5-flash":  true,
+	"grok-3-mini":       true,
 }
 
-// EvalCost calculates the cost for a single eval based on current monthly count.
+// UserCharge calculates what the user pays for an eval.
 // Returns 0 if within free quota and no payment method.
-func EvalCost(monthlyEvalCount int, hasPaymentMethod bool) float64 {
+func UserCharge(llmCost float64, monthlyEvalCount int, hasPaymentMethod bool) float64 {
 	if !hasPaymentMethod && monthlyEvalCount < FreeQuota {
 		return 0
 	}
-	_, rate := PricingTier(monthlyEvalCount)
-	return rate
+	return llmCost * (1 + Margin)
 }
 
 // CanRunEval checks whether the user can run an eval.
@@ -53,4 +44,9 @@ func CanRunEval(monthlyEvalCount int, hasPaymentMethod bool, monthlySpendUSD flo
 	}
 
 	return true, "paid"
+}
+
+// IsFreeModel returns true if the model is available on the free tier.
+func IsFreeModel(modelID string) bool {
+	return FreeModels[modelID]
 }

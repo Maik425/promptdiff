@@ -10,7 +10,6 @@ import (
 )
 
 // GetUsage handles GET /v1/usage.
-// Returns current month usage + billing info for the authenticated user.
 func (h *Handler) GetUsage(c echo.Context) error {
 	userID := middleware.UserIDFromContext(c)
 	user := middleware.UserFromContext(c)
@@ -26,34 +25,37 @@ func (h *Handler) GetUsage(c echo.Context) error {
 	}
 
 	var evalCount int
-	var totalCost float64
+	var totalCharge float64
 	if usage != nil {
 		evalCount = usage.EvalCount
-		totalCost = usage.TotalCostUSD
+		totalCharge = usage.TotalCostUSD
 	}
 
-	// Compute billing info
-	tier, rate := service.PricingTier(evalCount)
 	freeRemaining := service.FreeQuota - evalCount
 	if freeRemaining < 0 {
 		freeRemaining = 0
+	}
+
+	// Free model list
+	freeModels := make([]string, 0, len(service.FreeModels))
+	for m := range service.FreeModels {
+		freeModels = append(freeModels, m)
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"user_id":              userID,
 		"month":                month,
 		"eval_count":           evalCount,
-		"total_cost_usd":       totalCost,
+		"total_charge_usd":     totalCharge,
 		"has_payment_method":   user.HasPaymentMethod,
 		"monthly_spend_limit":  user.MonthlySpendLimit,
 		"free_evals_remaining": freeRemaining,
-		"current_tier":         tier,
-		"current_rate_usd":     rate,
 		"pricing": map[string]interface{}{
-			"free_quota":          service.FreeQuota,
-			"standard_rate":       service.RateStandard,
-			"volume_5k_rate":      service.RateVolume5K,
-			"volume_25k_rate":     service.RateVolume25K,
+			"model":       "pass-through",
+			"description": "LLM API cost + 40% margin",
+			"margin":      service.Margin,
+			"free_quota":  service.FreeQuota,
+			"free_models": freeModels,
 		},
 	})
 }

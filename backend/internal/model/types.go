@@ -46,6 +46,7 @@ type EvalResult struct {
 // EvalMeta holds aggregate metadata computed after all results are collected.
 type EvalMeta struct {
 	TotalCostUSD   float64 `json:"total_cost_usd"`
+	UserChargeUSD  float64 `json:"user_charge_usd"`
 	FastestModel   string  `json:"fastest_model"`
 	CheapestModel  string  `json:"cheapest_model"`
 }
