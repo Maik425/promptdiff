@@ -12,6 +12,12 @@ const (
 	PlanScale Plan = "scale"
 )
 
+// AuthProviderEmail is the default auth provider (email + password).
+const AuthProviderEmail = "email"
+
+// AuthProviderGoogle indicates the user signed up via Google OAuth.
+const AuthProviderGoogle = "google"
+
 // User represents a registered user.
 type User struct {
 	ID                string    `json:"id"`
@@ -23,6 +29,9 @@ type User struct {
 	StripeCustomerID  string    `json:"-"`
 	HasPaymentMethod  bool      `json:"has_payment_method"`
 	MonthlySpendLimit float64   `json:"monthly_spend_limit_usd"`
+	// AuthProvider is "email" for password auth and "google" for Google OAuth.
+	// It may be empty for rows created before migration 003.
+	AuthProvider      string    `json:"auth_provider,omitempty"`
 }
 
 // TokenUsage holds token counts for a completion.

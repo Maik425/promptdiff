@@ -21,6 +21,22 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// Rate-limit parameters. All RPS values are in requests-per-second to match
+// golang.org/x/time/rate; burst is the maximum token-bucket capacity.
+const (
+	// ipRPS: 10 requests per minute for public auth endpoints.
+	ipRPS   = 10.0 / 60.0
+	ipBurst = 10
+
+	// compareRPS: 20 requests per minute for POST /v1/compare (expensive endpoint).
+	compareRPS   = 20.0 / 60.0
+	compareBurst = 20
+
+	// apiKeyRPS: 60 requests per minute for general authenticated routes.
+	apiKeyRPS   = 60.0 / 60.0
+	apiKeyBurst = 60
+)
+
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -61,6 +77,10 @@ func run() error {
 	evalSvc := service.NewEvalService(registry, pg)
 	h := handler.New(cfg, pg, evalSvc, registry)
 
+	// done is closed on graceful shutdown to stop background goroutines
+	// (e.g. rate-limiter stale-entry cleanup).
+	done := make(chan struct{})
+
 	// Echo setup.
 	e := echo.New()
 	e.HideBanner = true
@@ -91,32 +111,43 @@ func run() error {
 		}
 	}
 
-	// Public routes.
-	v1 := e.Group("/v1")
-	v1.POST("/auth/signup", h.Signup)
-	v1.POST("/auth/login", h.Login)
+	// Rate limiters.
+	ipRL      := mw.IPRateLimit(ipRPS, ipBurst, done)
+	generalRL := mw.APIKeyRateLimit(apiKeyRPS, apiKeyBurst, done)
+	compareRL := mw.APIKeyRateLimit(compareRPS, compareBurst, done)
 
-	// Authenticated routes.
+	// Public routes — IP-based rate limiting applied per-route.
+	v1 := e.Group("/v1")
+	v1.POST("/auth/signup", h.Signup, ipRL)
+	v1.POST("/auth/login", h.Login, ipRL)
+
+	// Google OAuth — registered only when credentials are configured.
+	if cfg.GoogleOAuthClientID != "" {
+		v1.GET("/auth/google", h.GoogleAuthRedirect)
+		v1.GET("/auth/google/callback", h.GoogleAuthCallback)
+	}
+
+	// Authenticated routes — API-key rate limiting applied per-route.
 	auth := v1.Group("", mw.APIKeyAuth(pg))
-	auth.POST("/compare", h.Compare)
-	auth.GET("/evals", h.ListEvals)
-	auth.GET("/evals/:id", h.GetEval)
-	auth.GET("/models", h.ListModels)
-	auth.GET("/usage", h.GetUsage)
+	auth.POST("/compare", h.Compare, compareRL)
+	auth.GET("/evals", h.ListEvals, generalRL)
+	auth.GET("/evals/:id", h.GetEval, generalRL)
+	auth.GET("/models", h.ListModels, generalRL)
+	auth.GET("/usage", h.GetUsage, generalRL)
 
 	// Billing routes — only registered when Stripe is configured.
 	// Webhook is public (Stripe signs it); checkout-session and status require auth.
 	if cfg.StripeSecretKey != "" {
 		billing := auth.Group("/billing")
-		billing.POST("/checkout-session", h.CreateCheckoutSession)
-		billing.GET("/status", h.GetBillingStatus)
+		billing.POST("/checkout-session", h.CreateCheckoutSession, generalRL)
+		billing.GET("/status", h.GetBillingStatus, generalRL)
 
 		// Webhook must not go through the APIKeyAuth middleware — Stripe signs the
 		// payload itself and has no API key to pass.
 		v1.POST("/billing/webhook", h.HandleStripeWebhook)
 	}
 
-	// Health check (no auth).
+	// Health check (no auth, no rate limit).
 	e.GET("/health", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
 	})
@@ -136,6 +167,8 @@ func run() error {
 	<-quit
 
 	fmt.Println("shutting down...")
+	close(done) // stop background goroutines
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 

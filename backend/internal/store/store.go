@@ -13,6 +13,10 @@ type Store interface {
 	CreateUser(ctx context.Context, user *model.User) error
 	GetUserByEmail(ctx context.Context, email string) (*model.User, error)
 	GetUserByAPIKey(ctx context.Context, apiKey string) (*model.User, error)
+	// CreateOrGetOAuthUser creates a new user from a Google OAuth login or returns
+	// the existing user if the email is already registered. When the user already
+	// exists the auth_provider is NOT changed (email users can also log in via OAuth).
+	CreateOrGetOAuthUser(ctx context.Context, user *model.User) (*model.User, error)
 
 	// Eval operations
 	CreateEval(ctx context.Context, eval *model.Eval) error

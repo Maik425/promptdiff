@@ -22,6 +22,14 @@ type Config struct {
 	StripeWebhookSecret string
 	StripeSuccessURL    string
 	StripeCancelURL     string
+
+	// Google OAuth — all optional. OAuth endpoints are disabled when ClientID is empty.
+	GoogleOAuthClientID     string
+	GoogleOAuthClientSecret string
+	GoogleOAuthRedirectURL  string
+
+	// FrontendBaseURL is used to redirect the browser after OAuth completion.
+	FrontendBaseURL string
 }
 
 // Load reads configuration from environment variables.
@@ -46,6 +54,14 @@ func Load() (*Config, error) {
 			"STRIPE_CANCEL_URL",
 			"https://promptdiff.bizmarq.com/dashboard?payment=cancelled",
 		),
+
+		GoogleOAuthClientID:     os.Getenv("GOOGLE_OAUTH_CLIENT_ID"),
+		GoogleOAuthClientSecret: os.Getenv("GOOGLE_OAUTH_CLIENT_SECRET"),
+		GoogleOAuthRedirectURL: getEnv(
+			"GOOGLE_OAUTH_REDIRECT_URL",
+			"https://promptdiff.bizmarq.com/api/v1/auth/google/callback",
+		),
+		FrontendBaseURL: getEnv("FRONTEND_BASE_URL", "https://promptdiff.bizmarq.com"),
 	}
 
 	if cfg.DatabaseURL == "" {

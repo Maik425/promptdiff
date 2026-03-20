@@ -45,12 +45,17 @@ func (s *PostgresStore) Close() error {
 
 // CreateUser implements Store.
 func (s *PostgresStore) CreateUser(ctx context.Context, u *model.User) error {
+	provider := u.AuthProvider
+	if provider == "" {
+		provider = model.AuthProviderEmail
+	}
+
 	const q = `
-		INSERT INTO users (id, email, password_hash, api_key, plan, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6)`
+		INSERT INTO users (id, email, password_hash, api_key, plan, created_at, auth_provider)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)`
 
 	_, err := s.db.ExecContext(ctx, q,
-		u.ID, u.Email, u.PasswordHash, u.APIKey, string(u.Plan), u.CreatedAt,
+		u.ID, u.Email, u.PasswordHash, u.APIKey, string(u.Plan), u.CreatedAt, provider,
 	)
 	if err != nil {
 		if isUniqueViolation(err) {
@@ -61,17 +66,54 @@ func (s *PostgresStore) CreateUser(ctx context.Context, u *model.User) error {
 	return nil
 }
 
+// CreateOrGetOAuthUser implements Store.
+// If a user with the given email already exists it is returned unchanged.
+// Otherwise a new user row is inserted with auth_provider = 'google'.
+func (s *PostgresStore) CreateOrGetOAuthUser(ctx context.Context, u *model.User) (*model.User, error) {
+	// Try to create first. If the email already exists, fall through to a lookup.
+	const insert = `
+		INSERT INTO users (id, email, password_hash, api_key, plan, created_at, auth_provider)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		ON CONFLICT (email) DO NOTHING`
+
+	result, err := s.db.ExecContext(ctx, insert,
+		u.ID, u.Email, u.PasswordHash, u.APIKey, string(u.Plan), u.CreatedAt, u.AuthProvider,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("store: create oauth user: %w", err)
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return nil, fmt.Errorf("store: create oauth user rows affected: %w", err)
+	}
+
+	if rows == 1 {
+		// New user was created — return as-is.
+		return u, nil
+	}
+
+	// Existing user — look them up by email.
+	existing, err := s.GetUserByEmail(ctx, u.Email)
+	if err != nil {
+		return nil, fmt.Errorf("store: get existing oauth user: %w", err)
+	}
+	return existing, nil
+}
+
 // GetUserByEmail implements Store.
 func (s *PostgresStore) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	const q = `
 		SELECT id, email, password_hash, api_key, plan, created_at,
-			COALESCE(stripe_customer_id, ''), COALESCE(has_payment_method, false), COALESCE(monthly_spend_limit_usd, 50)
+			COALESCE(stripe_customer_id, ''), COALESCE(has_payment_method, false), COALESCE(monthly_spend_limit_usd, 50),
+			COALESCE(auth_provider, 'email')
 		FROM users WHERE email = $1`
 
 	u := &model.User{}
 	err := s.db.QueryRowContext(ctx, q, email).Scan(
 		&u.ID, &u.Email, &u.PasswordHash, &u.APIKey, &u.Plan, &u.CreatedAt,
 		&u.StripeCustomerID, &u.HasPaymentMethod, &u.MonthlySpendLimit,
+		&u.AuthProvider,
 	)
 	if err == sql.ErrNoRows {
 		return nil, ErrNotFound
@@ -86,13 +128,15 @@ func (s *PostgresStore) GetUserByEmail(ctx context.Context, email string) (*mode
 func (s *PostgresStore) GetUserByAPIKey(ctx context.Context, apiKey string) (*model.User, error) {
 	const q = `
 		SELECT id, email, password_hash, api_key, plan, created_at,
-			COALESCE(stripe_customer_id, ''), COALESCE(has_payment_method, false), COALESCE(monthly_spend_limit_usd, 50)
+			COALESCE(stripe_customer_id, ''), COALESCE(has_payment_method, false), COALESCE(monthly_spend_limit_usd, 50),
+			COALESCE(auth_provider, 'email')
 		FROM users WHERE api_key = $1`
 
 	u := &model.User{}
 	err := s.db.QueryRowContext(ctx, q, apiKey).Scan(
 		&u.ID, &u.Email, &u.PasswordHash, &u.APIKey, &u.Plan, &u.CreatedAt,
 		&u.StripeCustomerID, &u.HasPaymentMethod, &u.MonthlySpendLimit,
+		&u.AuthProvider,
 	)
 	if err == sql.ErrNoRows {
 		return nil, ErrNotFound
@@ -304,13 +348,15 @@ func (s *PostgresStore) UpsertUsage(ctx context.Context, userID, month string, e
 func (s *PostgresStore) GetUserByID(ctx context.Context, id string) (*model.User, error) {
 	const q = `
 		SELECT id, email, password_hash, api_key, plan, created_at,
-			COALESCE(stripe_customer_id, ''), COALESCE(has_payment_method, false), COALESCE(monthly_spend_limit_usd, 50)
+			COALESCE(stripe_customer_id, ''), COALESCE(has_payment_method, false), COALESCE(monthly_spend_limit_usd, 50),
+			COALESCE(auth_provider, 'email')
 		FROM users WHERE id = $1`
 
 	u := &model.User{}
 	err := s.db.QueryRowContext(ctx, q, id).Scan(
 		&u.ID, &u.Email, &u.PasswordHash, &u.APIKey, &u.Plan, &u.CreatedAt,
 		&u.StripeCustomerID, &u.HasPaymentMethod, &u.MonthlySpendLimit,
+		&u.AuthProvider,
 	)
 	if err == sql.ErrNoRows {
 		return nil, ErrNotFound
@@ -325,13 +371,15 @@ func (s *PostgresStore) GetUserByID(ctx context.Context, id string) (*model.User
 func (s *PostgresStore) GetUserByStripeCustomerID(ctx context.Context, stripeCustomerID string) (*model.User, error) {
 	const q = `
 		SELECT id, email, password_hash, api_key, plan, created_at,
-			COALESCE(stripe_customer_id, ''), COALESCE(has_payment_method, false), COALESCE(monthly_spend_limit_usd, 50)
+			COALESCE(stripe_customer_id, ''), COALESCE(has_payment_method, false), COALESCE(monthly_spend_limit_usd, 50),
+			COALESCE(auth_provider, 'email')
 		FROM users WHERE stripe_customer_id = $1`
 
 	u := &model.User{}
 	err := s.db.QueryRowContext(ctx, q, stripeCustomerID).Scan(
 		&u.ID, &u.Email, &u.PasswordHash, &u.APIKey, &u.Plan, &u.CreatedAt,
 		&u.StripeCustomerID, &u.HasPaymentMethod, &u.MonthlySpendLimit,
+		&u.AuthProvider,
 	)
 	if err == sql.ErrNoRows {
 		return nil, ErrNotFound
