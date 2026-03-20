@@ -104,6 +104,18 @@ func run() error {
 	auth.GET("/models", h.ListModels)
 	auth.GET("/usage", h.GetUsage)
 
+	// Billing routes — only registered when Stripe is configured.
+	// Webhook is public (Stripe signs it); checkout-session and status require auth.
+	if cfg.StripeSecretKey != "" {
+		billing := auth.Group("/billing")
+		billing.POST("/checkout-session", h.CreateCheckoutSession)
+		billing.GET("/status", h.GetBillingStatus)
+
+		// Webhook must not go through the APIKeyAuth middleware — Stripe signs the
+		// payload itself and has no API key to pass.
+		v1.POST("/billing/webhook", h.HandleStripeWebhook)
+	}
+
 	// Health check (no auth).
 	e.GET("/health", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"status": "ok"})

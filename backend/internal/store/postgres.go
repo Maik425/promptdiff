@@ -300,6 +300,68 @@ func (s *PostgresStore) UpsertUsage(ctx context.Context, userID, month string, e
 	return nil
 }
 
+// GetUserByID implements Store.
+func (s *PostgresStore) GetUserByID(ctx context.Context, id string) (*model.User, error) {
+	const q = `
+		SELECT id, email, password_hash, api_key, plan, created_at,
+			COALESCE(stripe_customer_id, ''), COALESCE(has_payment_method, false), COALESCE(monthly_spend_limit_usd, 50)
+		FROM users WHERE id = $1`
+
+	u := &model.User{}
+	err := s.db.QueryRowContext(ctx, q, id).Scan(
+		&u.ID, &u.Email, &u.PasswordHash, &u.APIKey, &u.Plan, &u.CreatedAt,
+		&u.StripeCustomerID, &u.HasPaymentMethod, &u.MonthlySpendLimit,
+	)
+	if err == sql.ErrNoRows {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("store: get user by id: %w", err)
+	}
+	return u, nil
+}
+
+// GetUserByStripeCustomerID implements Store.
+func (s *PostgresStore) GetUserByStripeCustomerID(ctx context.Context, stripeCustomerID string) (*model.User, error) {
+	const q = `
+		SELECT id, email, password_hash, api_key, plan, created_at,
+			COALESCE(stripe_customer_id, ''), COALESCE(has_payment_method, false), COALESCE(monthly_spend_limit_usd, 50)
+		FROM users WHERE stripe_customer_id = $1`
+
+	u := &model.User{}
+	err := s.db.QueryRowContext(ctx, q, stripeCustomerID).Scan(
+		&u.ID, &u.Email, &u.PasswordHash, &u.APIKey, &u.Plan, &u.CreatedAt,
+		&u.StripeCustomerID, &u.HasPaymentMethod, &u.MonthlySpendLimit,
+	)
+	if err == sql.ErrNoRows {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("store: get user by stripe customer id: %w", err)
+	}
+	return u, nil
+}
+
+// UpdateStripeCustomer sets the stripe_customer_id for a user.
+func (s *PostgresStore) UpdateStripeCustomer(ctx context.Context, userID, stripeCustomerID string) error {
+	const q = `UPDATE users SET stripe_customer_id = $1 WHERE id = $2`
+	_, err := s.db.ExecContext(ctx, q, stripeCustomerID, userID)
+	if err != nil {
+		return fmt.Errorf("store: update stripe customer: %w", err)
+	}
+	return nil
+}
+
+// SetPaymentMethod updates has_payment_method for a user.
+func (s *PostgresStore) SetPaymentMethod(ctx context.Context, userID string, hasPaymentMethod bool) error {
+	const q = `UPDATE users SET has_payment_method = $1 WHERE id = $2`
+	_, err := s.db.ExecContext(ctx, q, hasPaymentMethod, userID)
+	if err != nil {
+		return fmt.Errorf("store: set payment method: %w", err)
+	}
+	return nil
+}
+
 // isUniqueViolation returns true when err is a PostgreSQL unique constraint error.
 func isUniqueViolation(err error) bool {
 	if pqErr, ok := err.(*pq.Error); ok {

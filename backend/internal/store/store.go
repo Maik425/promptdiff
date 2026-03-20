@@ -23,6 +23,12 @@ type Store interface {
 	GetUsage(ctx context.Context, userID string, month string) (*model.Usage, error)
 	UpsertUsage(ctx context.Context, userID string, month string, evalDelta int, costDelta float64) error
 
+	// Billing operations
+	GetUserByID(ctx context.Context, id string) (*model.User, error)
+	GetUserByStripeCustomerID(ctx context.Context, stripeCustomerID string) (*model.User, error)
+	UpdateStripeCustomer(ctx context.Context, userID, stripeCustomerID string) error
+	SetPaymentMethod(ctx context.Context, userID string, hasPaymentMethod bool) error
+
 	// Close releases the database connection pool.
 	Close() error
 }

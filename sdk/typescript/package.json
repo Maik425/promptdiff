@@ -1,0 +1,34 @@
+{
+  "name": "promptdiff",
+  "version": "0.1.0",
+  "description": "Compare LLM outputs across models. One API call.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "llm",
+    "ai",
+    "prompt",
+    "compare",
+    "gpt",
+    "claude",
+    "gemini",
+    "evaluation"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

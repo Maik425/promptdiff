@@ -16,6 +16,12 @@ type Config struct {
 	OpenAIKey      string
 	GoogleAIKey    string
 	XAIKey         string
+
+	// Stripe — all optional. Billing endpoints return 501 if StripeSecretKey is empty.
+	StripeSecretKey     string
+	StripeWebhookSecret string
+	StripeSuccessURL    string
+	StripeCancelURL     string
 }
 
 // Load reads configuration from environment variables.
@@ -29,6 +35,17 @@ func Load() (*Config, error) {
 		OpenAIKey:    os.Getenv("OPENAI_API_KEY"),
 		GoogleAIKey:  os.Getenv("GOOGLE_AI_API_KEY"),
 		XAIKey:       os.Getenv("XAI_API_KEY"),
+
+		StripeSecretKey:     os.Getenv("STRIPE_SECRET_KEY"),
+		StripeWebhookSecret: os.Getenv("STRIPE_WEBHOOK_SECRET"),
+		StripeSuccessURL: getEnv(
+			"STRIPE_SUCCESS_URL",
+			"https://promptdiff.bizmarq.com/dashboard?payment=success",
+		),
+		StripeCancelURL: getEnv(
+			"STRIPE_CANCEL_URL",
+			"https://promptdiff.bizmarq.com/dashboard?payment=cancelled",
+		),
 	}
 
 	if cfg.DatabaseURL == "" {
