@@ -36,6 +36,9 @@ import {
   DollarSign,
   Settings2,
   Loader2,
+  RotateCcw,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -207,7 +210,8 @@ export default function PlaygroundPage() {
                 placeholder="Enter your prompt here..."
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                className="min-h-[140px] resize-none text-sm font-mono focus-visible:ring-primary/50"
+                rows={5}
+                className="min-h-[120px] resize-y text-sm font-mono focus-visible:ring-primary/50"
               />
               <p className="text-xs text-muted-foreground mt-1.5 text-right">
                 ~{estimateTokens(prompt)} tokens
@@ -240,9 +244,30 @@ export default function PlaygroundPage() {
 
           {/* Model selection */}
           <div className="p-5 border-b border-border">
-            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 block">
-              Models ({selectedModels.size} selected)
-            </label>
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Models ({selectedModels.size} selected)
+              </label>
+              {!modelsLoading && models.length > 0 && (
+                <button
+                  onClick={() => {
+                    if (selectedModels.size === models.length) {
+                      setSelectedModels(new Set());
+                    } else {
+                      setSelectedModels(new Set(models.map((m) => m.id)));
+                    }
+                  }}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {selectedModels.size === models.length ? (
+                    <CheckSquare className="w-3.5 h-3.5" />
+                  ) : (
+                    <Square className="w-3.5 h-3.5" />
+                  )}
+                  {selectedModels.size === models.length ? "Deselect all" : "Select all"}
+                </button>
+              )}
+            </div>
 
             {modelsLoading ? (
               <div className="space-y-2">
@@ -445,6 +470,15 @@ export default function PlaygroundPage() {
                   <Copy className="w-3 h-3" />
                 )}
                 JSON
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleCompare}
+                disabled={running || selectedModels.size === 0 || !prompt.trim()}
+                className="gap-1.5 h-7 text-xs bg-primary hover:bg-primary/90 text-white"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Run Again
               </Button>
             </div>
           </div>

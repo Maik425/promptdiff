@@ -165,6 +165,10 @@ export interface UsageResponse {
   free_evals_remaining: number;
   current_tier: string;
   current_rate_usd: number;
+  has_payment_method?: boolean;
+  email?: string;
+  created_at?: string;
+  monthly_spend_limit_usd?: number;
   pricing: {
     free_tier_limit: number;
     paid_rate_per_eval: number;

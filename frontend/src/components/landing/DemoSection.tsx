@@ -184,7 +184,7 @@ export function DemoSection() {
             )}
 
             {loading && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="space-y-3 p-5 rounded-xl border border-border">
                     <div className="flex items-center justify-between">
@@ -204,7 +204,7 @@ export function DemoSection() {
 
             {showing && (
               <div className="pt-2 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {DEMO_RESULT.results.map((r) => (
                     <ResultCard
                       key={r.model}

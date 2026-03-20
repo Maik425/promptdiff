@@ -23,32 +23,32 @@ export function Hero() {
           One API call. All models. Instant comparison.
         </Badge>
 
-        <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight text-foreground leading-[1.08] mb-6">
+        <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-foreground leading-[1.08] mb-6">
           Compare LLM outputs
           <br />
           <span className="text-primary">across models.</span>
         </h1>
 
-        <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+        <p className="text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed px-2">
           One API call. Pick your models. Get structured comparisons of output,
           latency, cost, and token usage — side by side.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link href="/signup">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto">
+          <Link href="/signup" className="w-full sm:w-auto">
             <Button
               size="lg"
-              className="bg-primary hover:bg-primary/90 text-white px-8 h-12 text-base gap-2 shadow-lg shadow-primary/25"
+              className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white px-8 h-12 text-base gap-2 shadow-lg shadow-primary/25"
             >
               Get Started Free
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
-          <Link href="/docs">
+          <Link href="/docs" className="w-full sm:w-auto">
             <Button
               size="lg"
               variant="outline"
-              className="px-8 h-12 text-base border-border hover:bg-accent"
+              className="w-full sm:w-auto px-8 h-12 text-base border-border hover:bg-accent"
             >
               Read the docs
             </Button>

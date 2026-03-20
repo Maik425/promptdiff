@@ -12,6 +12,7 @@ import {
   BookOpen,
   LogOut,
   ChevronRight,
+  Settings,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -36,6 +37,11 @@ const navItems = [
     label: "API Keys",
     href: "/dashboard/keys",
     icon: Key,
+  },
+  {
+    label: "Settings",
+    href: "/dashboard/settings",
+    icon: Settings,
   },
 ];
 

@@ -529,6 +529,56 @@ const docsContent: Record<string, { title: string; content: React.ReactNode }> =
     },
   };
 
+// Per-page ToC entries
+const docsToc: Record<string, Array<{ label: string; id: string }>> = {
+  quickstart: [
+    { label: "Get your API key", id: "get-your-api-key" },
+    { label: "Make your first comparison", id: "make-your-first-comparison" },
+    { label: "Parse the results", id: "parse-the-results" },
+    { label: "Using the Python SDK", id: "using-the-python-sdk" },
+  ],
+  authentication: [
+    { label: "API Key format", id: "api-key-format" },
+    { label: "Request header", id: "request-header" },
+    { label: "Get your key", id: "get-your-key" },
+  ],
+  "api-reference": [
+    { label: "Request body", id: "request-body" },
+    { label: "Example", id: "example" },
+  ],
+  models: [
+    { label: "Model pricing table", id: "model-pricing-table" },
+  ],
+  examples: [
+    { label: "Choosing the cheapest model", id: "choosing-the-cheapest-model" },
+    { label: "Latency benchmarking", id: "latency-benchmarking" },
+    { label: "JavaScript / TypeScript", id: "javascript-typescript" },
+  ],
+};
+
+function TableOfContents({ entries }: { entries: Array<{ label: string; id: string }> }) {
+  if (entries.length === 0) return null;
+  return (
+    <aside className="hidden xl:block w-48 shrink-0 sticky top-24 self-start">
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+        On this page
+      </p>
+      <ul className="space-y-1.5">
+        {entries.map((entry) => (
+          <li key={entry.id}>
+            <a
+              href={`#${entry.id}`}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors block leading-snug"
+            >
+              {entry.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </aside>
+  );
+}
+
 export default async function DocsSlugPage({ params }: PageProps) {
   const { slug } = await params;
   const key = slug.join("/");
@@ -538,7 +588,14 @@ export default async function DocsSlugPage({ params }: PageProps) {
     notFound();
   }
 
-  return <div>{doc.content}</div>;
+  const toc = docsToc[key] ?? [];
+
+  return (
+    <div className="flex gap-8">
+      <div className="flex-1 min-w-0 overflow-x-hidden">{doc.content}</div>
+      <TableOfContents entries={toc} />
+    </div>
+  );
 }
 
 export async function generateStaticParams() {

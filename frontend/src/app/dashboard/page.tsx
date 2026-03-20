@@ -15,6 +15,8 @@ import {
   Zap,
   ArrowRight,
   History,
+  CreditCard,
+  CheckCircle2,
 } from "lucide-react";
 
 function StatCard({
@@ -122,6 +124,43 @@ export default function DashboardPage() {
           loading={loading}
         />
       </div>
+
+      {/* Payment method banner */}
+      {!loading && (
+        <div className="mb-6">
+          {usage?.has_payment_method === false || usage?.has_payment_method === undefined ? (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-amber-50 border border-amber-200 rounded-xl p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                  <CreditCard className="w-4 h-4 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-amber-900">
+                    Add a payment method to unlock unlimited evals
+                  </p>
+                  <p className="text-xs text-amber-700 mt-0.5">
+                    You have {usage?.free_evals_remaining ?? 0} free evals remaining this month.
+                  </p>
+                </div>
+              </div>
+              <Link href="/dashboard/settings" className="flex-shrink-0">
+                <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white gap-1.5 whitespace-nowrap">
+                  <CreditCard className="w-3.5 h-3.5" />
+                  Add Card
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+              <p className="text-sm font-medium text-emerald-900">Payment method: Active</p>
+              <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 ml-auto">
+                Active
+              </Badge>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Quick actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">

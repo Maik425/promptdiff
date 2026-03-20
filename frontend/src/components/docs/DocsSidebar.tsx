@@ -31,7 +31,7 @@ const docsNav = [
   },
 ];
 
-export function DocsSidebar() {
+export function DocsSidebar({ onNavigate }: { onNavigate?: () => void } = {}) {
   const pathname = usePathname();
 
   return (
@@ -52,6 +52,7 @@ export function DocsSidebar() {
                   <li key={item.href}>
                     <Link
                       href={item.href}
+                      onClick={onNavigate}
                       className={cn(
                         "block px-3 py-1.5 rounded-md text-sm transition-colors",
                         isActive
