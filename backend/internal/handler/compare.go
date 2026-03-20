@@ -21,6 +21,16 @@ func (h *Handler) Compare(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "prompt is required")
 	}
 
+	// Input size limits — prevent cost abuse
+	const maxPromptLen = 32000  // ~8K tokens
+	const maxInputLen = 128000  // ~32K tokens
+	if len(req.Prompt) > maxPromptLen {
+		return echo.NewHTTPError(http.StatusBadRequest, "prompt too long (max 32,000 characters)")
+	}
+	if len(req.Input) > maxInputLen {
+		return echo.NewHTTPError(http.StatusBadRequest, "input too long (max 128,000 characters)")
+	}
+
 	if len(req.Models) == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "at least one model is required")
 	}
@@ -72,7 +82,9 @@ func (h *Handler) Compare(c echo.Context) error {
 
 	resp, err := h.evalSvc.RunComparison(c.Request().Context(), userID, req, evalCount, user.HasPaymentMethod)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		// Don't leak internal error details to the client
+		c.Logger().Errorf("compare error for user %s: %v", userID, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "comparison failed. Please try again.")
 	}
 
 	return c.JSON(http.StatusOK, resp)

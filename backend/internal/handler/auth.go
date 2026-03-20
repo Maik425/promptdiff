@@ -28,8 +28,15 @@ func (h *Handler) Signup(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "email and password are required")
 	}
 
+	// Input validation
+	if len(req.Email) > 254 {
+		return echo.NewHTTPError(http.StatusBadRequest, "email too long")
+	}
 	if len(req.Password) < 8 {
 		return echo.NewHTTPError(http.StatusBadRequest, "password must be at least 8 characters")
+	}
+	if len(req.Password) > 128 {
+		return echo.NewHTTPError(http.StatusBadRequest, "password too long (max 128 characters)")
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
