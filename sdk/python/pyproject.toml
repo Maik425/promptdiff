@@ -1,0 +1,47 @@
+[project]
+name = "promptdiff"
+version = "0.1.0"
+description = "Compare LLM outputs across models. One API call."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+keywords = ["llm", "ai", "prompt", "evaluation", "comparison"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
+dependencies = ["httpx>=0.24.0"]
+
+[project.urls]
+Homepage = "https://promptdiff.bizmarq.com"
+Documentation = "https://promptdiff.bizmarq.com/docs"
+Repository = "https://github.com/Maik425/promptdiff"
+"Bug Tracker" = "https://github.com/Maik425/promptdiff/issues"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["promptdiff*"]
+
+[tool.mypy]
+python_version = "3.9"
+strict = true
+pretty = true
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

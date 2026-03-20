@@ -37,12 +37,16 @@ export default function EvalDetailPage() {
     setTimeout(() => setCopiedJson(false), 2000);
   };
 
-  const fastestModel = data?.results.reduce((a: ModelResult, b: ModelResult) =>
-    a.latency_ms < b.latency_ms ? a : b
-  )?.model;
-  const cheapestModel = data?.results.reduce((a: ModelResult, b: ModelResult) =>
-    a.cost_usd < b.cost_usd ? a : b
-  )?.model;
+  const fastestModel = data?.results.length
+    ? data.results.reduce((a: ModelResult, b: ModelResult) =>
+        a.latency_ms < b.latency_ms ? a : b
+      ).model
+    : undefined;
+  const cheapestModel = data?.results.length
+    ? data.results.reduce((a: ModelResult, b: ModelResult) =>
+        a.cost_usd < b.cost_usd ? a : b
+      ).model
+    : undefined;
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
