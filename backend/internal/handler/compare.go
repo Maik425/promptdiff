@@ -39,6 +39,11 @@ func (h *Handler) Compare(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "maximum 8 models per eval")
 	}
 
+	// Cap max_tokens to prevent cost abuse
+	if req.Options != nil && req.Options.MaxTokens > 16384 {
+		return echo.NewHTTPError(http.StatusBadRequest, "max_tokens must be <= 16384")
+	}
+
 	// Validate models exist
 	for _, m := range req.Models {
 		if _, ok := h.registry.Lookup(m); !ok {

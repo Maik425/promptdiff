@@ -36,7 +36,8 @@ func (h *Handler) CreateCheckoutSession(c echo.Context) error {
 	if customerID == "" {
 		cust, err := sc.CreateCustomer(user.Email, user.ID)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Sprintf("failed to create stripe customer: %v", err))
+			c.Logger().Errorf("billing: create customer: %v", err)
+			return echo.NewHTTPError(http.StatusInternalServerError, "billing service error")
 		}
 		customerID = cust.ID
 
@@ -49,7 +50,8 @@ func (h *Handler) CreateCheckoutSession(c echo.Context) error {
 
 	sess, err := sc.CreateCheckoutSession(customerID, h.cfg.StripeSuccessURL, h.cfg.StripeCancelURL)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Sprintf("failed to create checkout session: %v", err))
+		c.Logger().Errorf("billing: create session: %v", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "billing service error")
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
@@ -70,9 +72,9 @@ func (h *Handler) GetBillingStatus(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"has_payment_method": user.HasPaymentMethod,
-		"stripe_customer_id": user.StripeCustomerID,
-		"plan":               string(user.Plan),
+		"has_payment_method":  user.HasPaymentMethod,
+		"has_stripe_account":  user.StripeCustomerID != "",
+		"plan":                string(user.Plan),
 	})
 }
 
@@ -87,7 +89,7 @@ func (h *Handler) HandleStripeWebhook(c echo.Context) error {
 	}
 
 	// Read the raw body BEFORE any framework parsing — required for signature verification.
-	rawBody, err := io.ReadAll(c.Request().Body)
+	rawBody, err := io.ReadAll(io.LimitReader(c.Request().Body, 65536)) // 64KB max for webhook
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to read request body")
 	}

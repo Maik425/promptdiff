@@ -125,8 +125,8 @@ func run() error {
 
 	// Google OAuth — registered only when credentials are configured.
 	if cfg.GoogleOAuthClientID != "" {
-		v1.GET("/auth/google", h.GoogleAuthRedirect)
-		v1.GET("/auth/google/callback", h.GoogleAuthCallback)
+		v1.GET("/auth/google", h.GoogleAuthRedirect, ipRL)
+		v1.GET("/auth/google/callback", h.GoogleAuthCallback, ipRL)
 	}
 
 	// Authenticated routes — API-key rate limiting applied per-route.
@@ -153,7 +153,7 @@ func run() error {
 
 		// Webhook must not go through the APIKeyAuth middleware — Stripe signs the
 		// payload itself and has no API key to pass.
-		v1.POST("/billing/webhook", h.HandleStripeWebhook)
+		v1.POST("/billing/webhook", h.HandleStripeWebhook, ipRL)
 	}
 
 	// Health check (no auth, no rate limit).
