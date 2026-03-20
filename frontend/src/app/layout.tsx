@@ -37,6 +37,9 @@ export const metadata: Metadata = {
     description: "One API call. All models. Instant comparison.",
     creator: "@maiki_ships",
   },
+  verification: {
+    google: "0qRpIuu5bGxDugxFr44J8aZY-_dDvdH4r9i1VHo4ojQ",
+  },
   alternates: {
     canonical: "https://promptdiff.bizmarq.com",
   },
