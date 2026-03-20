@@ -18,8 +18,8 @@ const xaiBaseURL = "https://api.x.ai/v1/chat/completions"
 
 var xaiPricing = map[string][2]float64{
 	// [inputPer1M, outputPer1M]
-	"grok-2":      {2.00, 10.00},
-	"grok-2-mini": {0.10, 0.25},
+	"grok-3":      {3.00, 15.00},
+	"grok-3-mini": {0.30, 0.50},
 }
 
 // XAIProvider implements Provider for xAI (Grok) models.
@@ -43,18 +43,18 @@ func (x *XAIProvider) Name() string { return "xai" }
 func (x *XAIProvider) SupportedModels() []model.ModelInfo {
 	return []model.ModelInfo{
 		{
-			ID:          "grok-2",
-			Name:        "Grok 2",
+			ID:          "grok-3",
+			Name:        "Grok 3",
 			Provider:    "xai",
-			InputPer1M:  2.00,
-			OutputPer1M: 10.00,
+			InputPer1M:  3.00,
+			OutputPer1M: 15.00,
 		},
 		{
-			ID:          "grok-2-mini",
-			Name:        "Grok 2 Mini",
+			ID:          "grok-3-mini",
+			Name:        "Grok 3 Mini",
 			Provider:    "xai",
-			InputPer1M:  0.10,
-			OutputPer1M: 0.25,
+			InputPer1M:  0.30,
+			OutputPer1M: 0.50,
 		},
 	}
 }
