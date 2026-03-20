@@ -374,6 +374,325 @@ const docsContent: Record<string, { title: string; content: React.ReactNode }> =
         </article>
       ),
     },
+    "api-reference/models": {
+      title: "API Reference — Models",
+      content: (
+        <article className="space-y-6">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-2">
+              API Reference
+            </p>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground mb-3">
+              GET /v1/models
+            </h1>
+            <p className="text-base text-muted-foreground leading-relaxed">
+              Returns all available LLM models and their pricing.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-xl border border-border overflow-hidden">
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-muted/30">
+              <span className="font-mono text-xs font-bold text-white bg-emerald-500 px-2 py-0.5 rounded">
+                GET
+              </span>
+              <code className="text-sm font-mono text-foreground">
+                https://promptdiff.bizmarq.com/api/v1/models
+              </code>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-foreground">Parameters</h2>
+            <p className="text-sm text-muted-foreground">
+              No parameters. Requires authentication (Bearer token).
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-foreground">Response</h2>
+            <CodeBlock
+              language="json"
+              filename="response.json"
+              code={`{
+  "models": [
+    {
+      "id": "claude-haiku-4-5",
+      "name": "Claude Haiku 4.5",
+      "provider": "anthropic",
+      "input_per_1m": 0.80,
+      "output_per_1m": 4.00
+    },
+    {
+      "id": "gpt-4o-mini",
+      "name": "GPT-4o Mini",
+      "provider": "openai",
+      "input_per_1m": 0.15,
+      "output_per_1m": 0.60
+    },
+    {
+      "id": "gemini-2.5-flash",
+      "name": "Gemini 2.5 Flash",
+      "provider": "google",
+      "input_per_1m": 0.15,
+      "output_per_1m": 0.60
+    },
+    {
+      "id": "grok-3-mini",
+      "name": "Grok 3 Mini",
+      "provider": "xai",
+      "input_per_1m": 0.30,
+      "output_per_1m": 0.50
+    }
+  ]
+}`}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-foreground">Example</h2>
+            <CodeBlock
+              language="bash"
+              code={`curl https://promptdiff.bizmarq.com/api/v1/models \\
+  -H "Authorization: Bearer pd_your_api_key_here"`}
+            />
+          </div>
+        </article>
+      ),
+    },
+    "api-reference/evals": {
+      title: "API Reference — Evals",
+      content: (
+        <article className="space-y-6">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-2">
+              API Reference
+            </p>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground mb-3">
+              GET /v1/evals
+            </h1>
+            <p className="text-base text-muted-foreground leading-relaxed">
+              List past evaluations or get a specific eval by ID.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="bg-white rounded-xl border border-border overflow-hidden">
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-muted/30">
+                <span className="font-mono text-xs font-bold text-white bg-emerald-500 px-2 py-0.5 rounded">
+                  GET
+                </span>
+                <code className="text-sm font-mono text-foreground">
+                  https://promptdiff.bizmarq.com/api/v1/evals
+                </code>
+              </div>
+            </div>
+            <div className="bg-white rounded-xl border border-border overflow-hidden">
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-muted/30">
+                <span className="font-mono text-xs font-bold text-white bg-emerald-500 px-2 py-0.5 rounded">
+                  GET
+                </span>
+                <code className="text-sm font-mono text-foreground">
+                  https://promptdiff.bizmarq.com/api/v1/evals/:id
+                </code>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-foreground">Parameters</h2>
+            <div className="space-y-3">
+              {[
+                {
+                  name: "limit",
+                  type: "number",
+                  required: false,
+                  desc: "Number of results to return. Default: 20, max: 100.",
+                },
+                {
+                  name: "offset",
+                  type: "number",
+                  required: false,
+                  desc: "Number of results to skip for pagination. Default: 0.",
+                },
+              ].map((p) => (
+                <div
+                  key={p.name}
+                  className="bg-white rounded-lg border border-border p-4"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <code className="font-mono text-sm text-primary">
+                      {p.name}
+                    </code>
+                    <span className="text-xs text-muted-foreground font-mono">
+                      {p.type}
+                    </span>
+                    <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                      optional
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{p.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-foreground">List response</h2>
+            <CodeBlock
+              language="json"
+              filename="list-response.json"
+              code={`{
+  "evals": [
+    {
+      "eval_id": "eval_01j8abc123",
+      "prompt": "What is the capital of France?",
+      "models": ["gpt-4o-mini", "claude-haiku-4-5"],
+      "created_at": "2026-03-20T10:00:00Z",
+      "meta": {
+        "total_cost_usd": 0.000031,
+        "fastest_model": "gpt-4o-mini"
+      }
+    }
+  ],
+  "limit": 20,
+  "offset": 0
+}`}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-foreground">Single eval response</h2>
+            <p className="text-sm text-muted-foreground">
+              Fetching a specific eval by ID returns the full eval object including all results and metadata.
+            </p>
+            <CodeBlock
+              language="json"
+              filename="single-response.json"
+              code={`{
+  "eval_id": "eval_01j8abc123",
+  "prompt": "What is the capital of France?",
+  "models": ["gpt-4o-mini", "claude-haiku-4-5"],
+  "results": [
+    {
+      "model": "gpt-4o-mini",
+      "provider": "openai",
+      "output": "The capital of France is Paris.",
+      "latency_ms": 612,
+      "cost_usd": 0.000012,
+      "input_tokens": 10,
+      "output_tokens": 8,
+      "total_tokens": 18
+    }
+  ],
+  "meta": {
+    "total_cost_usd": 0.000031,
+    "fastest_model": "gpt-4o-mini",
+    "cheapest_model": "gpt-4o-mini",
+    "created_at": "2026-03-20T10:00:00Z"
+  }
+}`}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-foreground">Example</h2>
+            <CodeBlock
+              language="bash"
+              code={`# List evals
+curl "https://promptdiff.bizmarq.com/api/v1/evals?limit=10&offset=0" \\
+  -H "Authorization: Bearer pd_your_api_key_here"
+
+# Get single eval
+curl https://promptdiff.bizmarq.com/api/v1/evals/eval_01j8abc123 \\
+  -H "Authorization: Bearer pd_your_api_key_here"`}
+            />
+          </div>
+        </article>
+      ),
+    },
+    "api-reference/usage": {
+      title: "API Reference — Usage",
+      content: (
+        <article className="space-y-6">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-2">
+              API Reference
+            </p>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground mb-3">
+              GET /v1/usage
+            </h1>
+            <p className="text-base text-muted-foreground leading-relaxed">
+              Get current month usage and billing information.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-xl border border-border overflow-hidden">
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-muted/30">
+              <span className="font-mono text-xs font-bold text-white bg-emerald-500 px-2 py-0.5 rounded">
+                GET
+              </span>
+              <code className="text-sm font-mono text-foreground">
+                https://promptdiff.bizmarq.com/api/v1/usage
+              </code>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-foreground">Parameters</h2>
+            <div className="bg-white rounded-lg border border-border p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <code className="font-mono text-sm text-primary">month</code>
+                <span className="text-xs text-muted-foreground font-mono">string</span>
+                <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                  optional
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Month in <code className="font-mono">YYYY-MM</code> format. Defaults to the current month.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-foreground">Response</h2>
+            <CodeBlock
+              language="json"
+              filename="response.json"
+              code={`{
+  "user_id": "usr_01j8abc123",
+  "email": "you@example.com",
+  "month": "2026-03",
+  "eval_count": 42,
+  "total_charge_usd": 0.58,
+  "free_evals_remaining": 58,
+  "has_payment_method": true,
+  "pricing": {
+    "model": "pass-through",
+    "description": "LLM API cost + 40% margin",
+    "margin": 0.4,
+    "free_quota": 100,
+    "free_models": [
+      "claude-haiku-4-5",
+      "gpt-4o-mini",
+      "gemini-2.5-flash",
+      "grok-3-mini"
+    ]
+  }
+}`}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-foreground">Example</h2>
+            <CodeBlock
+              language="bash"
+              code={`curl "https://promptdiff.bizmarq.com/api/v1/usage?month=2026-03" \\
+  -H "Authorization: Bearer pd_your_api_key_here"`}
+            />
+          </div>
+        </article>
+      ),
+    },
     models: {
       title: "Models & Pricing",
       content: (
@@ -576,6 +895,22 @@ const docsToc: Record<string, Array<{ label: string; id: string }>> = {
   ],
   "api-reference": [
     { label: "Request body", id: "request-body" },
+    { label: "Example", id: "example" },
+  ],
+  "api-reference/models": [
+    { label: "Parameters", id: "parameters" },
+    { label: "Response", id: "response" },
+    { label: "Example", id: "example" },
+  ],
+  "api-reference/evals": [
+    { label: "Parameters", id: "parameters" },
+    { label: "List response", id: "list-response" },
+    { label: "Single eval response", id: "single-eval-response" },
+    { label: "Example", id: "example" },
+  ],
+  "api-reference/usage": [
+    { label: "Parameters", id: "parameters" },
+    { label: "Response", id: "response" },
     { label: "Example", id: "example" },
   ],
   models: [

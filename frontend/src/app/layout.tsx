@@ -21,19 +21,21 @@ export const metadata: Metadata = {
     template: "%s | PromptDiff",
   },
   description:
-    "Compare LLM outputs across models with one API call. Get structured comparisons of output, latency, cost, and tokens per model.",
-  keywords: ["LLM", "AI", "comparison", "GPT", "Claude", "API", "benchmark"],
+    "Compare LLM outputs across models with one API call. Get structured comparisons of output, latency, cost, and tokens. Supports Claude, GPT, Gemini, Grok.",
+  keywords: ["LLM", "AI", "comparison", "GPT", "Claude", "Gemini", "Grok", "API", "benchmark", "prompt testing"],
   openGraph: {
     title: "PromptDiff — Compare LLM Outputs Across Models",
     description:
-      "Compare LLM outputs across models with one API call. Structured comparisons of output, latency, cost, and tokens.",
+      "One API call. All models. Instant comparison of output, latency, cost, and tokens. Free 100 evals/month.",
     type: "website",
     url: "https://promptdiff.bizmarq.com",
+    siteName: "PromptDiff",
   },
   twitter: {
     card: "summary_large_image",
     title: "PromptDiff — Compare LLM Outputs Across Models",
-    description: "Compare LLM outputs across models with one API call.",
+    description: "One API call. All models. Instant comparison.",
+    creator: "@maiki_ships",
   },
   metadataBase: new URL("https://promptdiff.bizmarq.com"),
 };
