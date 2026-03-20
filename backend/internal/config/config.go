@@ -15,6 +15,7 @@ type Config struct {
 	AnthropicKey   string
 	OpenAIKey      string
 	GoogleAIKey    string
+	XAIKey         string
 }
 
 // Load reads configuration from environment variables.
@@ -27,6 +28,7 @@ func Load() (*Config, error) {
 		AnthropicKey: os.Getenv("ANTHROPIC_API_KEY"),
 		OpenAIKey:    os.Getenv("OPENAI_API_KEY"),
 		GoogleAIKey:  os.Getenv("GOOGLE_AI_API_KEY"),
+		XAIKey:       os.Getenv("XAI_API_KEY"),
 	}
 
 	if cfg.DatabaseURL == "" {

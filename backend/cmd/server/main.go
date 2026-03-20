@@ -53,6 +53,9 @@ func run() error {
 	if cfg.GoogleAIKey != "" {
 		providers = append(providers, provider.NewGoogleProvider(cfg.GoogleAIKey))
 	}
+	if cfg.XAIKey != "" {
+		providers = append(providers, provider.NewXAIProvider(cfg.XAIKey))
+	}
 
 	registry := provider.NewRegistry(providers...)
 	evalSvc := service.NewEvalService(registry, pg)
