@@ -90,9 +90,10 @@ func run() error {
 	e.Use(middleware.Recover())
 	e.Use(middleware.BodyLimit("1M")) // Max 1MB request body
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"https://promptdiff.bizmarq.com"},
-		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
-		AllowHeaders: []string{echo.HeaderContentType, echo.HeaderAuthorization},
+		AllowOrigins:     []string{"https://promptdiff.bizmarq.com", "http://localhost:3000", "http://localhost:3001"},
+		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
+		AllowHeaders:     []string{echo.HeaderContentType, echo.HeaderAuthorization},
+		AllowCredentials: false,
 	}))
 
 	// Custom HTTP error handler for consistent JSON error responses.
