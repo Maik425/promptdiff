@@ -16,8 +16,8 @@ import (
 const googleAIBaseURL = "https://generativelanguage.googleapis.com/v1beta/models"
 
 var googlePricing = map[string][2]float64{
-	"gemini-2.0-flash": {0.10, 0.40},
-	"gemini-2.0-pro":   {1.25, 5.00},
+	"gemini-2.5-flash": {0.15, 0.60},
+	"gemini-2.5-pro":   {1.25, 10.00},
 }
 
 // GoogleProvider implements Provider for Google Gemini models.
@@ -41,18 +41,18 @@ func (g *GoogleProvider) Name() string { return "google" }
 func (g *GoogleProvider) SupportedModels() []model.ModelInfo {
 	return []model.ModelInfo{
 		{
-			ID:          "gemini-2.0-flash",
-			Name:        "Gemini 2.0 Flash",
+			ID:          "gemini-2.5-flash",
+			Name:        "Gemini 2.5 Flash",
 			Provider:    "google",
-			InputPer1M:  0.10,
-			OutputPer1M: 0.40,
+			InputPer1M:  0.15,
+			OutputPer1M: 0.60,
 		},
 		{
-			ID:          "gemini-2.0-pro",
-			Name:        "Gemini 2.0 Pro",
+			ID:          "gemini-2.5-pro",
+			Name:        "Gemini 2.5 Pro",
 			Provider:    "google",
 			InputPer1M:  1.25,
-			OutputPer1M: 5.00,
+			OutputPer1M: 10.00,
 		},
 	}
 }
