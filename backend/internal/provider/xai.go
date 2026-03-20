@@ -110,24 +110,35 @@ func (x *XAIProvider) Complete(ctx context.Context, req CompletionRequest) (*Com
 		return nil, fmt.Errorf("xai: read response: %w", err)
 	}
 
-	var or openAIResponse
-	if err := json.Unmarshal(raw, &or); err != nil {
-		return nil, fmt.Errorf("xai: decode response: %w", err)
-	}
-
 	result := &CompletionResult{
 		Model:     req.Model,
 		Provider:  "xai",
 		LatencyMs: latencyMs,
 	}
 
-	if or.Error != nil {
-		result.Error = or.Error.Message
+	if resp.StatusCode != http.StatusOK {
+		result.Error = fmt.Sprintf("HTTP %d: %s", resp.StatusCode, string(raw))
 		return result, nil
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		result.Error = fmt.Sprintf("HTTP %d: %s", resp.StatusCode, string(raw))
+	// xAI uses OpenAI-compatible format but error field can be a string
+	// Try standard OpenAI format first, fall back to raw error extraction
+	var or openAIResponse
+	if err := json.Unmarshal(raw, &or); err != nil {
+		// Try parsing as {error: "string"} format
+		var rawErr struct {
+			Error string `json:"error"`
+		}
+		if err2 := json.Unmarshal(raw, &rawErr); err2 == nil && rawErr.Error != "" {
+			result.Error = rawErr.Error
+			return result, nil
+		}
+		result.Error = fmt.Sprintf("xai: decode response: %s", string(raw[:min(len(raw), 200)]))
+		return result, nil
+	}
+
+	if or.Error != nil {
+		result.Error = or.Error.Message
 		return result, nil
 	}
 
