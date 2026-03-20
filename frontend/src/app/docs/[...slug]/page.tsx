@@ -769,13 +769,13 @@ curl https://promptdiff.bizmarq.com/api/v1/evals/eval_01j8abc123 \\
                   },
                   {
                     model: "grok-3",
-                    provider: "xAI",
+                    provider: "Grok",
                     input: "$3.00",
                     output: "$15.00",
                   },
                   {
                     model: "grok-3-mini",
-                    provider: "xAI",
+                    provider: "Grok",
                     input: "$0.30",
                     output: "$0.50",
                   },

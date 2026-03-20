@@ -204,7 +204,7 @@ export default function PrivacyPage() {
           <ul className="text-sm text-muted-foreground leading-relaxed space-y-2 list-disc pl-5">
             <li>
               <strong className="text-foreground">LLM providers</strong>{" "}
-              (Anthropic, OpenAI, Google, xAI): Your prompts are sent to the
+              (Anthropic, OpenAI, Google, Grok): Your prompts are sent to the
               providers of the models you select. Each provider has their own
               privacy policy and data handling practices. We send only the prompt
               content and model parameters; we do not send your account

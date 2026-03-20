@@ -107,7 +107,7 @@ export default async function OGImage() {
             { label: "Anthropic", dot: "#c97b4b" },
             { label: "OpenAI", dot: "#10a37f" },
             { label: "Google", dot: "#4285f4" },
-            { label: "xAI", dot: "#9333ea" },
+            { label: "Grok", dot: "#9333ea" },
           ].map((provider) => (
             <div
               key={provider.label}

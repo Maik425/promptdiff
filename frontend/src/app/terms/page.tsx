@@ -99,7 +99,7 @@ export default function TermsPage() {
             PromptDiff is an API and web dashboard that lets you compare outputs from
             multiple large language models (LLMs) in a single request. We route your
             prompts to third-party LLM providers (such as Anthropic, OpenAI, Google,
-            and xAI) and return structured results including output text, latency,
+            and Grok) and return structured results including output text, latency,
             token counts, and cost.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed">
@@ -284,7 +284,7 @@ export default function TermsPage() {
           <p className="text-sm text-muted-foreground leading-relaxed mb-3">
             PromptDiff relies on third-party LLM providers to generate outputs. When
             you submit a prompt, it is sent to the providers of the models you
-            selected (e.g., Anthropic, OpenAI, Google, xAI).
+            selected (e.g., Anthropic, OpenAI, Google, Grok).
           </p>
           <ul className="text-sm text-muted-foreground leading-relaxed space-y-2 list-disc pl-5">
             <li>
