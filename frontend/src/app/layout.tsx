@@ -37,6 +37,9 @@ export const metadata: Metadata = {
     description: "One API call. All models. Instant comparison.",
     creator: "@maiki_ships",
   },
+  alternates: {
+    canonical: "https://promptdiff.bizmarq.com",
+  },
   metadataBase: new URL("https://promptdiff.bizmarq.com"),
 };
 
@@ -51,6 +54,38 @@ export default function RootLayout({
       className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              "name": "PromptDiff",
+              "applicationCategory": "DeveloperApplication",
+              "operatingSystem": "Web",
+              "description": "Compare LLM outputs across models with one API call. Supports Claude, GPT-4o, Gemini, and Grok.",
+              "url": "https://promptdiff.bizmarq.com",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD",
+                "description": "Free tier: 100 evals/month. Pay-as-you-go after.",
+              },
+              "featureList": [
+                "Cross-model LLM comparison",
+                "Claude, GPT-4o, Gemini, Grok support",
+                "Latency and cost benchmarking",
+                "REST API with Python and TypeScript SDKs",
+                "Usage-based pricing with free tier",
+              ],
+              "author": {
+                "@type": "Organization",
+                "name": "Bizmarq",
+                "url": "https://bizmarq.com",
+              },
+            }),
+          }}
+        />
         {children}
         <Toaster position="bottom-right" />
       </body>

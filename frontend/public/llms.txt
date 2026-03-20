@@ -1,0 +1,37 @@
+# PromptDiff
+
+> Compare LLM outputs across models with one API call.
+
+PromptDiff is a developer API that compares outputs from multiple large language models simultaneously. Send one request with your prompt and a list of models, and receive structured results showing each model's output, latency, token usage, and cost.
+
+## Key Features
+- Cross-model comparison in a single API call
+- Supports Claude (Anthropic), GPT (OpenAI), Gemini (Google), and Grok (xAI)
+- 8 models available: claude-sonnet-4-6, claude-haiku-4-5, gpt-4o, gpt-4o-mini, gemini-2.5-pro, gemini-2.5-flash, grok-3, grok-3-mini
+- Real-time latency and cost tracking per model
+- Python and TypeScript SDKs
+- REST API with Bearer token authentication
+
+## Pricing
+- Free: 100 evaluations per month (mini models only, no credit card required)
+- Paid: LLM API cost + 40% margin (pay-as-you-go)
+- Monthly spend limit configurable
+
+## Quick Start
+Sign up at https://promptdiff.bizmarq.com/signup to get an API key.
+
+## API Endpoint
+POST https://promptdiff.bizmarq.com/api/v1/compare
+
+## Documentation
+- Quickstart: https://promptdiff.bizmarq.com/docs/quickstart
+- API Reference: https://promptdiff.bizmarq.com/docs/api-reference
+- Models & Pricing: https://promptdiff.bizmarq.com/docs/models
+- Examples: https://promptdiff.bizmarq.com/docs/examples
+
+## Links
+- Website: https://promptdiff.bizmarq.com
+- Documentation: https://promptdiff.bizmarq.com/docs
+- Sign Up: https://promptdiff.bizmarq.com/signup
+- Terms: https://promptdiff.bizmarq.com/terms
+- Privacy: https://promptdiff.bizmarq.com/privacy

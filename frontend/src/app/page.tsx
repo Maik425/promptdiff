@@ -5,6 +5,7 @@ import { HowItWorks } from "@/components/landing/HowItWorks";
 import { CurlExample } from "@/components/landing/CurlExample";
 import { ModelsGrid } from "@/components/landing/ModelsGrid";
 import { Pricing } from "@/components/landing/Pricing";
+import { WhyPromptDiff } from "@/components/landing/WhyPromptDiff";
 import { Footer } from "@/components/landing/Footer";
 
 export default function LandingPage() {
@@ -18,6 +19,7 @@ export default function LandingPage() {
         <CurlExample />
         <ModelsGrid />
         <Pricing />
+        <WhyPromptDiff />
       </main>
       <Footer />
     </div>

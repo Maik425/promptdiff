@@ -1,9 +1,67 @@
+import type { Metadata } from "next";
 import { CodeBlock } from "@/components/docs/CodeBlock";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 interface PageProps {
   params: Promise<{ slug: string[] }>;
+}
+
+const docsMeta: Record<string, { title: string; description: string }> = {
+  quickstart: {
+    title: "Quickstart — PromptDiff Docs",
+    description:
+      "Get your first LLM comparison running in under 5 minutes with PromptDiff API.",
+  },
+  authentication: {
+    title: "Authentication — PromptDiff API",
+    description:
+      "How to authenticate with the PromptDiff API using Bearer tokens.",
+  },
+  "api-reference": {
+    title: "POST /v1/compare — PromptDiff API Reference",
+    description:
+      "Compare LLM outputs across models with POST /v1/compare. Full request and response schema.",
+  },
+  "api-reference/models": {
+    title: "GET /v1/models — PromptDiff API Reference",
+    description:
+      "List all supported LLM models and their pricing per million tokens.",
+  },
+  "api-reference/evals": {
+    title: "GET /v1/evals — PromptDiff API Reference",
+    description:
+      "List past evaluations or retrieve a specific eval by ID.",
+  },
+  "api-reference/usage": {
+    title: "GET /v1/usage — PromptDiff API Reference",
+    description:
+      "Get current month usage, billing information, and pricing details.",
+  },
+  models: {
+    title: "Models & Pricing — PromptDiff",
+    description:
+      "All 8 supported LLM models from Anthropic, OpenAI, Google, and Grok with pricing per million tokens.",
+  },
+  examples: {
+    title: "Examples — PromptDiff",
+    description:
+      "Code examples for PromptDiff in Python, TypeScript, and curl.",
+  },
+};
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const key = slug.join("/");
+  const meta = docsMeta[key];
+  if (!meta) return {};
+  return {
+    title: meta.title,
+    description: meta.description,
+    alternates: {
+      canonical: `https://promptdiff.bizmarq.com/docs/${key}`,
+    },
+  };
 }
 
 const QUICKSTART_PY = [

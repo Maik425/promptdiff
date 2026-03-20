@@ -1,0 +1,205 @@
+# PromptDiff — Full Reference
+
+> Compare LLM outputs across models with one API call.
+
+PromptDiff is a developer API that compares outputs from multiple large language models simultaneously. Send one request with your prompt and a list of model IDs, and receive structured results showing each model's output, latency in milliseconds, token usage, and exact cost in USD.
+
+## Product Summary
+- Name: PromptDiff
+- Category: Developer API / LLM benchmarking tool
+- Website: https://promptdiff.bizmarq.com
+- Built by: Bizmarq (https://bizmarq.com)
+- Authentication: Bearer token (API key prefix: pd_)
+
+## Supported Models
+
+| Model ID           | Provider  | Input (per 1M tokens) | Output (per 1M tokens) | Free Tier |
+|--------------------|-----------|----------------------|------------------------|-----------|
+| claude-sonnet-4-6  | Anthropic | $3.00                | $15.00                 | No        |
+| claude-haiku-4-5   | Anthropic | $0.80                | $4.00                  | Yes       |
+| gpt-4o             | OpenAI    | $5.00                | $15.00                 | No        |
+| gpt-4o-mini        | OpenAI    | $0.15                | $0.60                  | Yes       |
+| gemini-2.5-pro     | Google    | $1.25                | $10.00                 | No        |
+| gemini-2.5-flash   | Google    | $0.15                | $0.60                  | Yes       |
+| grok-3             | xAI       | $3.00                | $15.00                 | No        |
+| grok-3-mini        | xAI       | $0.30                | $0.50                  | Yes       |
+
+Prices reflect underlying LLM provider costs. PromptDiff adds a 40% margin. Always query GET /v1/models for current pricing.
+
+## Pricing Model
+- Free tier: 100 evaluations per month — mini models only (claude-haiku-4-5, gpt-4o-mini, gemini-2.5-flash, grok-3-mini)
+- No credit card required for free tier
+- Paid: LLM API cost + 40% margin, pay-as-you-go
+- Monthly spend limit: configurable per account
+
+## API Reference
+
+### POST /v1/compare
+Compare a prompt across multiple LLM models in parallel.
+
+Endpoint: https://promptdiff.bizmarq.com/api/v1/compare
+Method: POST
+Authentication: Bearer token required
+
+Request body (JSON):
+```
+{
+  "prompt": "string (required) — The prompt to send to each model",
+  "models": ["string"] (required) — Array of model IDs from GET /v1/models",
+  "input": "string (optional) — Input variable injected into the prompt context",
+  "options": {
+    "temperature": "number (optional, 0–2, default 0.7)",
+    "max_tokens": "number (optional, default 500)"
+  }
+}
+```
+
+Response body (JSON):
+```
+{
+  "eval_id": "string — Unique evaluation ID (prefix: eval_)",
+  "results": [
+    {
+      "model": "string — Model ID",
+      "provider": "string — Provider name",
+      "output": "string — Model's text output",
+      "latency_ms": "number — End-to-end latency in milliseconds",
+      "cost_usd": "number — Cost for this result in USD",
+      "input_tokens": "number",
+      "output_tokens": "number",
+      "total_tokens": "number"
+    }
+  ],
+  "meta": {
+    "total_cost_usd": "number — Sum of all model costs",
+    "fastest_model": "string — Model ID with lowest latency",
+    "cheapest_model": "string — Model ID with lowest cost",
+    "created_at": "string — ISO 8601 timestamp"
+  }
+}
+```
+
+### GET /v1/models
+List all available LLM models and their current pricing.
+
+Endpoint: https://promptdiff.bizmarq.com/api/v1/models
+Method: GET
+Authentication: Bearer token required
+
+Response body (JSON):
+```
+{
+  "models": [
+    {
+      "id": "string — Model ID to use in /v1/compare requests",
+      "name": "string — Human-readable model name",
+      "provider": "string — Provider name",
+      "input_per_1m": "number — Input cost per 1M tokens in USD",
+      "output_per_1m": "number — Output cost per 1M tokens in USD"
+    }
+  ]
+}
+```
+
+### GET /v1/evals
+List past evaluations or retrieve a specific eval by ID.
+
+Endpoints:
+- GET https://promptdiff.bizmarq.com/api/v1/evals — list evals
+- GET https://promptdiff.bizmarq.com/api/v1/evals/:id — get single eval
+
+Query parameters (list endpoint):
+- limit: number (optional, default 20, max 100)
+- offset: number (optional, default 0)
+
+### GET /v1/usage
+Get current month usage and billing information.
+
+Endpoint: https://promptdiff.bizmarq.com/api/v1/usage
+Method: GET
+Authentication: Bearer token required
+
+Query parameters:
+- month: string (optional, format YYYY-MM, defaults to current month)
+
+Response includes: eval_count, total_charge_usd, free_evals_remaining, has_payment_method, pricing details.
+
+## SDK Examples
+
+### Python SDK
+```python
+from promptdiff import PromptDiff
+
+pd = PromptDiff(api_key="pd_your_api_key")
+
+result = pd.compare(
+    prompt="Explain async/await in JavaScript.",
+    models=["gpt-4o-mini", "claude-haiku-4-5", "gemini-2.5-flash"],
+)
+
+for r in result.results:
+    print(r.model, r.latency_ms, r.cost_usd)
+    print(r.output[:100])
+```
+
+### TypeScript SDK
+```typescript
+import { PromptDiff } from 'promptdiff';
+
+const pd = new PromptDiff({ apiKey: 'pd_your_api_key' });
+
+const result = await pd.compare({
+  prompt: 'Explain async/await in JavaScript.',
+  models: ['gpt-4o-mini', 'claude-haiku-4-5', 'gemini-2.5-flash'],
+  temperature: 0.7,
+  maxTokens: 300,
+});
+
+for (const r of result.results) {
+  console.log(r.model, r.latencyMs, r.costUsd);
+  console.log(r.output.slice(0, 100));
+}
+```
+
+### curl
+```bash
+curl -X POST https://promptdiff.bizmarq.com/api/v1/compare \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer pd_your_api_key" \
+  -d '{
+    "prompt": "What is the capital of France?",
+    "models": ["gpt-4o-mini", "claude-haiku-4-5", "gemini-2.5-flash", "grok-3-mini"]
+  }'
+```
+
+## Frequently Asked Questions
+
+Q: What is PromptDiff?
+A: PromptDiff is an API that compares LLM outputs across multiple models (Claude, GPT-4o, Gemini, Grok) with a single API call. It returns structured results including output text, latency, cost, and token usage for each model.
+
+Q: How much does PromptDiff cost?
+A: PromptDiff offers 100 free evaluations per month with no credit card required. After the free tier, pricing is based on actual LLM API costs plus a 40% margin. Mini models (Claude Haiku, GPT-4o-mini, Gemini Flash, Grok Mini) are available in the free tier.
+
+Q: Which LLM models does PromptDiff support?
+A: PromptDiff supports 8 models from 4 providers: Claude Sonnet 4.6 and Haiku 4.5 (Anthropic), GPT-4o and GPT-4o-mini (OpenAI), Gemini 2.5 Pro and Flash (Google), and Grok 3 and Grok 3 Mini (xAI).
+
+Q: Does PromptDiff have an SDK?
+A: Yes, PromptDiff provides both Python and TypeScript SDKs. You can also use the REST API directly with any HTTP client like curl or fetch.
+
+Q: Is there a rate limit?
+A: Free tier users can run up to 100 evaluations per month using mini models. Paid users can configure a monthly spend limit. Contact support for higher rate limits.
+
+Q: How does PromptDiff handle my prompts?
+A: Prompts are forwarded to the selected LLM providers and stored for your eval history (retrievable via GET /v1/evals). See the privacy policy for full details.
+
+## Links
+- Website: https://promptdiff.bizmarq.com
+- Sign Up: https://promptdiff.bizmarq.com/signup
+- Documentation: https://promptdiff.bizmarq.com/docs
+- Quickstart: https://promptdiff.bizmarq.com/docs/quickstart
+- API Reference: https://promptdiff.bizmarq.com/docs/api-reference
+- Models & Pricing: https://promptdiff.bizmarq.com/docs/models
+- Examples: https://promptdiff.bizmarq.com/docs/examples
+- Authentication: https://promptdiff.bizmarq.com/docs/authentication
+- Terms of Service: https://promptdiff.bizmarq.com/terms
+- Privacy Policy: https://promptdiff.bizmarq.com/privacy
