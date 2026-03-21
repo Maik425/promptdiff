@@ -141,6 +141,27 @@ type LoginResponse struct {
 	APIKey string `json:"api_key"`
 }
 
+// UserSummary is a lightweight user record for admin views.
+type UserSummary struct {
+	ID               string  `json:"id"`
+	Email            string  `json:"email"`
+	Plan             string  `json:"plan"`
+	AuthProvider     string  `json:"auth_provider"`
+	EmailVerified    bool    `json:"email_verified"`
+	HasPaymentMethod bool    `json:"has_payment_method"`
+	EvalCount        int     `json:"eval_count"`
+	TotalCostUSD     float64 `json:"total_cost_usd"`
+	CreatedAt        string  `json:"created_at"`
+}
+
+// GlobalUsage holds aggregate usage stats across all users.
+type GlobalUsage struct {
+	TotalUsers    int     `json:"total_users"`
+	TotalEvals    int     `json:"total_evals"`
+	TotalCostUSD  float64 `json:"total_cost_usd"`
+	ActiveUsers   int     `json:"active_users"`
+}
+
 // ModelInfo describes a supported LLM model.
 type ModelInfo struct {
 	ID           string  `json:"id"`

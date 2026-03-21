@@ -102,12 +102,19 @@ func (h *Handler) Login(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
 	}
 
-	// JWT generation is intentionally removed (Finding 1.3): no route validates
-	// JWTs, so issuing them was misleading. Authentication uses API keys only.
-	// The raw API key is shown once at signup or regeneration; it cannot be
-	// recovered from the stored hash, so login only confirms credentials.
+	// Since API keys are hashed in the DB, we can't return the original key.
+	// Instead, regenerate a new key on each login so the user always has a
+	// working key. The old key becomes invalid immediately.
+	rawKey, err := generateAPIKey()
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "login failed")
+	}
+	if err := h.store.RegenerateAPIKey(c.Request().Context(), user.ID, hashAPIKey(rawKey)); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "login failed")
+	}
+
 	return c.JSON(http.StatusOK, model.LoginResponse{
-		APIKey: "",
+		APIKey: rawKey,
 	})
 }
 

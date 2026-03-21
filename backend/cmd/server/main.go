@@ -148,6 +148,13 @@ func run() error {
 	settings.POST("/regenerate-key", h.RegenerateAPIKey, generalRL)
 	settings.DELETE("/account", h.DeleteAccount, generalRL)
 
+	// Admin routes — restricted to admin email.
+	admin := auth.Group("/admin", handler.AdminOnly())
+	admin.GET("/users", h.AdminListUsers, generalRL)
+	admin.POST("/users/:id/verify", h.AdminVerifyEmail, generalRL)
+	admin.PUT("/users/:id/plan", h.AdminUpdatePlan, generalRL)
+	admin.GET("/usage", h.AdminGetUsage, generalRL)
+
 	// Billing routes — only registered when Stripe is configured.
 	// Webhook is public (Stripe signs it); checkout-session and status require auth.
 	if cfg.StripeSecretKey != "" {

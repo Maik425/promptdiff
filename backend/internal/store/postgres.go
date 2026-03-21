@@ -484,6 +484,74 @@ func nullableJSON(b []byte) interface{} {
 	return b
 }
 
+// ListAllUsers implements Store.
+func (s *PostgresStore) ListAllUsers(ctx context.Context) ([]model.UserSummary, error) {
+	const q = `
+		SELECT u.id, u.email, u.plan, COALESCE(u.auth_provider, 'email'),
+			COALESCE(u.email_verified, false), COALESCE(u.has_payment_method, false),
+			COALESCE(us.eval_count, 0), COALESCE(us.total_cost_usd, 0),
+			u.created_at
+		FROM users u
+		LEFT JOIN usage us ON u.id = us.user_id AND us.month = to_char(NOW(), 'YYYY-MM')
+		ORDER BY u.created_at DESC`
+
+	rows, err := s.db.QueryContext(ctx, q)
+	if err != nil {
+		return nil, fmt.Errorf("store: list all users: %w", err)
+	}
+	defer rows.Close()
+
+	var users []model.UserSummary
+	for rows.Next() {
+		var u model.UserSummary
+		var createdAt time.Time
+		if err := rows.Scan(&u.ID, &u.Email, &u.Plan, &u.AuthProvider,
+			&u.EmailVerified, &u.HasPaymentMethod, &u.EvalCount, &u.TotalCostUSD, &createdAt); err != nil {
+			return nil, fmt.Errorf("store: scan user: %w", err)
+		}
+		u.CreatedAt = createdAt.Format(time.RFC3339)
+		users = append(users, u)
+	}
+	return users, rows.Err()
+}
+
+// SetEmailVerified implements Store.
+func (s *PostgresStore) SetEmailVerified(ctx context.Context, userID string, verified bool) error {
+	const q = `UPDATE users SET email_verified = $1 WHERE id = $2`
+	_, err := s.db.ExecContext(ctx, q, verified, userID)
+	if err != nil {
+		return fmt.Errorf("store: set email verified: %w", err)
+	}
+	return nil
+}
+
+// UpdatePlan implements Store.
+func (s *PostgresStore) UpdatePlan(ctx context.Context, userID string, plan string) error {
+	const q = `UPDATE users SET plan = $1 WHERE id = $2`
+	_, err := s.db.ExecContext(ctx, q, plan, userID)
+	if err != nil {
+		return fmt.Errorf("store: update plan: %w", err)
+	}
+	return nil
+}
+
+// GetGlobalUsage implements Store.
+func (s *PostgresStore) GetGlobalUsage(ctx context.Context) (*model.GlobalUsage, error) {
+	const q = `
+		SELECT
+			(SELECT COUNT(*) FROM users) as total_users,
+			COALESCE((SELECT SUM(eval_count) FROM usage WHERE month = to_char(NOW(), 'YYYY-MM')), 0) as total_evals,
+			COALESCE((SELECT SUM(total_cost_usd) FROM usage WHERE month = to_char(NOW(), 'YYYY-MM')), 0) as total_cost,
+			(SELECT COUNT(DISTINCT user_id) FROM usage WHERE month = to_char(NOW(), 'YYYY-MM') AND eval_count > 0) as active_users`
+
+	g := &model.GlobalUsage{}
+	err := s.db.QueryRowContext(ctx, q).Scan(&g.TotalUsers, &g.TotalEvals, &g.TotalCostUSD, &g.ActiveUsers)
+	if err != nil {
+		return nil, fmt.Errorf("store: get global usage: %w", err)
+	}
+	return g, nil
+}
+
 // Sentinel errors returned by the store layer.
 var (
 	ErrNotFound = fmt.Errorf("not found")
