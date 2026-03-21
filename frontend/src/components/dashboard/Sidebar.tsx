@@ -61,7 +61,7 @@ export function Sidebar() {
       <div className="px-5 py-5 border-b border-sidebar-border">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-white font-bold text-xs font-mono">PD</span>
+            <div className="flex items-end gap-[2px]"><div className="w-[3px] h-[8px] bg-white/50 rounded-[1px]" /><div className="w-[3px] h-[12px] bg-white/85 rounded-[1px]" /><div className="w-[3px] h-[10px] bg-white/65 rounded-[1px]" /></div>
           </div>
           <span className="font-semibold text-white text-sm tracking-tight">
             PromptDiff

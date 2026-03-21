@@ -72,7 +72,7 @@ function LoginContent() {
         <div className="flex items-center justify-center gap-2 mb-8">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
-              <span className="text-white font-bold font-mono">PD</span>
+              <div className="flex items-end gap-[3px]"><div className="w-[4px] h-[10px] bg-white/50 rounded-sm" /><div className="w-[4px] h-[15px] bg-white/85 rounded-sm" /><div className="w-[4px] h-[12px] bg-white/65 rounded-sm" /></div>
             </div>
             <span className="font-semibold text-xl text-foreground">
               PromptDiff
