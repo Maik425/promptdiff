@@ -18,8 +18,7 @@ import (
 )
 
 // Signup handles POST /v1/auth/signup.
-// It creates a new user account, hashes the password, generates an API key,
-// and returns the new user's ID and API key.
+// Returns JWT (for dashboard sessions) + raw API key (for SDK/curl, shown once).
 func (h *Handler) Signup(c echo.Context) error {
 	var req model.SignupRequest
 	if err := c.Bind(&req); err != nil {
@@ -30,7 +29,6 @@ func (h *Handler) Signup(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "email and password are required")
 	}
 
-	// Input validation
 	if len(req.Email) > 254 {
 		return echo.NewHTTPError(http.StatusBadRequest, "email too long")
 	}
@@ -65,21 +63,25 @@ func (h *Handler) Signup(c echo.Context) error {
 
 	if err := h.store.CreateUser(c.Request().Context(), user); err != nil {
 		if err == store.ErrConflict {
-			// Generic message to prevent user enumeration (Finding 1.6).
 			return echo.NewHTTPError(http.StatusConflict, "signup failed")
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create user")
 	}
 
-	// Return the raw key once — it is never retrievable again after this point.
+	token, err := h.generateJWT(user.ID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "signup failed")
+	}
+
 	return c.JSON(http.StatusCreated, model.SignupResponse{
 		UserID: user.ID,
 		APIKey: rawKey,
+		Token:  token,
 	})
 }
 
 // Login handles POST /v1/auth/login.
-// It verifies the password, then returns a signed JWT and the user's API key.
+// Returns JWT for dashboard session. API key is NOT regenerated (SDK stability).
 func (h *Handler) Login(c echo.Context) error {
 	var req model.LoginRequest
 	if err := c.Bind(&req); err != nil {
@@ -102,23 +104,20 @@ func (h *Handler) Login(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
 	}
 
-	// Since API keys are hashed in the DB, we can't return the original key.
-	// Instead, regenerate a new key on each login so the user always has a
-	// working key. The old key becomes invalid immediately.
-	rawKey, err := generateAPIKey()
+	token, err := h.generateJWT(user.ID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "login failed")
 	}
-	if err := h.store.RegenerateAPIKey(c.Request().Context(), user.ID, hashAPIKey(rawKey)); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "login failed")
-	}
 
+	// Return JWT for dashboard. API key is NOT returned here because
+	// it's hashed in DB and cannot be recovered. Users see their key
+	// only at signup or when they regenerate it in dashboard/keys.
 	return c.JSON(http.StatusOK, model.LoginResponse{
-		APIKey: rawKey,
+		Token: token,
 	})
 }
 
-// generateJWT creates a signed JWT for the given user ID.
+// generateJWT creates a signed JWT for the given user ID (30-day expiry).
 func (h *Handler) generateJWT(userID string) (string, error) {
 	claims := jwt.MapClaims{
 		"sub": userID,
@@ -139,7 +138,6 @@ func generateAPIKey() (string, error) {
 }
 
 // hashAPIKey returns a hex-encoded SHA-256 digest of rawKey.
-// Only the hash is stored in the database; the raw key is shown to the user once.
 func hashAPIKey(rawKey string) string {
 	h := sha256.Sum256([]byte(rawKey))
 	return hex.EncodeToString(h[:])

@@ -134,7 +134,7 @@ func run() error {
 	}
 
 	// Authenticated routes — API-key rate limiting applied per-route.
-	auth := v1.Group("", mw.APIKeyAuth(pg))
+	auth := v1.Group("", mw.Auth(pg, cfg.JWTSecret))
 	auth.POST("/compare", h.Compare, compareRL)
 	auth.GET("/evals", h.ListEvals, generalRL)
 	auth.GET("/evals/:id", h.GetEval, generalRL)

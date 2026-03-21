@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { signup, storeApiKey } from "@/lib/api";
+import { signup, storeApiKey, storeToken } from "@/lib/api";
 import { toast } from "sonner";
 import { Check } from "lucide-react";
 
@@ -39,6 +39,7 @@ export default function SignupPage() {
     setLoading(true);
     try {
       const data = await signup(email, password);
+      storeToken(data.token);
       storeApiKey(data.api_key);
       localStorage.setItem("pd_email", email);
       toast.success("Account created! Welcome to PromptDiff.");

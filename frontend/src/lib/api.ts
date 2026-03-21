@@ -15,12 +15,15 @@ export async function apiFetch<T = unknown>(
   path: string,
   options?: RequestInit
 ): Promise<T> {
-  const apiKey =
-    typeof window !== "undefined" ? localStorage.getItem("pd_api_key") : null;
+  // Prefer JWT for dashboard sessions, fall back to API key for SDK compatibility
+  const token =
+    typeof window !== "undefined"
+      ? localStorage.getItem("pd_token") || localStorage.getItem("pd_api_key")
+      : null;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options?.headers as Record<string, string>),
   };
 
@@ -44,11 +47,11 @@ export async function apiFetch<T = unknown>(
 export interface SignupResponse {
   user_id: string;
   api_key: string;
+  token: string;
 }
 
 export interface LoginResponse {
   token: string;
-  api_key: string;
 }
 
 export async function signup(
@@ -225,11 +228,17 @@ export function storeApiKey(key: string): void {
   localStorage.setItem("pd_api_key", key);
 }
 
+export function storeToken(token: string): void {
+  localStorage.setItem("pd_token", token);
+}
+
 export function clearAuth(): void {
   localStorage.removeItem("pd_api_key");
+  localStorage.removeItem("pd_token");
   localStorage.removeItem("pd_email");
 }
 
 export function isAuthenticated(): boolean {
-  return !!getStoredApiKey();
+  if (typeof window === "undefined") return false;
+  return !!(localStorage.getItem("pd_token") || localStorage.getItem("pd_api_key"));
 }

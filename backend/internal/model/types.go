@@ -128,6 +128,7 @@ type SignupRequest struct {
 type SignupResponse struct {
 	UserID string `json:"user_id"`
 	APIKey string `json:"api_key"`
+	Token  string `json:"token"`
 }
 
 // LoginRequest is the JSON body for POST /v1/auth/login.
@@ -138,7 +139,7 @@ type LoginRequest struct {
 
 // LoginResponse is returned after a successful login.
 type LoginResponse struct {
-	APIKey string `json:"api_key"`
+	Token string `json:"token"`
 }
 
 // UserSummary is a lightweight user record for admin views.

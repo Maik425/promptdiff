@@ -164,18 +164,22 @@ func (h *Handler) GoogleAuthCallback(c echo.Context) error {
 	}
 
 	// For returning users the candidate key was not stored (ON CONFLICT DO NOTHING).
-	// Regenerate their key so this session receives a fresh usable raw key.
-	if user.ID != candidate.ID {
-		if err := h.store.RegenerateAPIKey(c.Request().Context(), user.ID, hashAPIKey(rawKey)); err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to refresh API key")
-		}
+	// Don't regenerate API key — that would break SDK users on other devices.
+	// For new users, the rawKey is already stored.
+
+	// Generate JWT for the dashboard browser session.
+	token, err := h.generateJWT(user.ID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate session token")
 	}
 
-	// Redirect the browser to the frontend login page with the api_key as a
-	// query parameter. The frontend reads it from the URL and stores it.
-	// JWT is not issued (Finding 1.3): no route validates JWTs.
+	// Redirect to frontend with JWT. API key is only included for new users.
 	redirectParams := url.Values{}
-	redirectParams.Set("api_key", rawKey)
+	redirectParams.Set("token", token)
+	if user.ID == candidate.ID {
+		// New user — show API key once
+		redirectParams.Set("api_key", rawKey)
+	}
 
 	frontendURL := h.cfg.FrontendBaseURL + "/login?" + redirectParams.Encode()
 	return c.Redirect(http.StatusFound, frontendURL)

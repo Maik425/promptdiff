@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { login, storeApiKey } from "@/lib/api";
+import { login, storeApiKey, storeToken } from "@/lib/api";
 import { toast } from "sonner";
 
 const API_BASE =
@@ -26,11 +26,15 @@ function LoginContent() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Handle Google OAuth callback
+  // Handle Google OAuth callback (JWT + optional API key for new users)
   useEffect(() => {
+    const token = searchParams.get("token");
     const apiKey = searchParams.get("api_key");
-    if (apiKey) {
-      storeApiKey(apiKey);
+    if (token) {
+      storeToken(token);
+      if (apiKey) {
+        storeApiKey(apiKey);
+      }
       toast.success("Signed in with Google");
       router.push("/dashboard/playground");
     }
@@ -50,7 +54,7 @@ function LoginContent() {
     setLoading(true);
     try {
       const data = await login(email, password);
-      storeApiKey(data.api_key);
+      storeToken(data.token);
       localStorage.setItem("pd_email", email);
       toast.success("Signed in successfully");
       router.push("/dashboard/playground");
