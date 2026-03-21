@@ -42,6 +42,7 @@ type Store interface {
 	// Admin operations
 	ListAllUsers(ctx context.Context) ([]model.UserSummary, error)
 	SetEmailVerified(ctx context.Context, userID string, verified bool) error
+	SetGoogleLinked(ctx context.Context, userID string) error
 	UpdatePlan(ctx context.Context, userID string, plan string) error
 	GetGlobalUsage(ctx context.Context) (*model.GlobalUsage, error)
 

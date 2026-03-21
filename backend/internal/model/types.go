@@ -32,9 +32,8 @@ type User struct {
 	// AuthProvider is "email" for password auth and "google" for Google OAuth.
 	// It may be empty for rows created before migration 003.
 	AuthProvider  string `json:"auth_provider,omitempty"`
-	// EmailVerified tracks whether the user has confirmed their email address.
-	// Unverified users receive a reduced free quota as an abuse deterrent.
-	EmailVerified bool `json:"email_verified"`
+	GoogleLinked  bool   `json:"google_linked"`
+	EmailVerified bool   `json:"email_verified"`
 }
 
 // TokenUsage holds token counts for a completion.

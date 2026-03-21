@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   FlaskConical,
   History,
+  Shield,
   Key,
   BookOpen,
   LogOut,
@@ -42,6 +43,11 @@ const navItems = [
     label: "Settings",
     href: "/dashboard/settings",
     icon: Settings,
+  },
+  {
+    label: "Admin",
+    href: "/dashboard/admin",
+    icon: Shield,
   },
 ];
 

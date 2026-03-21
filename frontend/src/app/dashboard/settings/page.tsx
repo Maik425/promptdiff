@@ -61,6 +61,7 @@ export default function SettingsPage() {
   const plan = usage?.plan ?? "free";
   const authProvider = usage?.auth_provider ?? "email";
   const hasPassword = (usage as unknown as Record<string, unknown>)?.has_password !== false;
+  const googleLinked = (usage as unknown as Record<string, unknown>)?.google_linked === true;
   const hasPayment = usage?.has_payment_method ?? false;
   const spendLimit = usage?.monthly_spend_limit ?? 0;
 
@@ -206,7 +207,7 @@ export default function SettingsPage() {
                   {hasPassword && (
                     <Badge variant="secondary">Email & Password</Badge>
                   )}
-                  {(authProvider === "google" || !hasPassword) && (
+                  {googleLinked && (
                     <Badge variant="secondary">Google</Badge>
                   )}
                 </div>

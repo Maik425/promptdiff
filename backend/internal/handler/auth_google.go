@@ -163,9 +163,8 @@ func (h *Handler) GoogleAuthCallback(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create or fetch user")
 	}
 
-	// For returning users the candidate key was not stored (ON CONFLICT DO NOTHING).
-	// Don't regenerate API key — that would break SDK users on other devices.
-	// For new users, the rawKey is already stored.
+	// Mark that this user has used Google login.
+	_ = h.store.SetGoogleLinked(c.Request().Context(), user.ID)
 
 	// Generate JWT for the dashboard browser session.
 	token, err := h.generateJWT(user.ID)
