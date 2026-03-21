@@ -60,6 +60,7 @@ export default function SettingsPage() {
   const createdAt = usage?.created_at ?? null;
   const plan = usage?.plan ?? "free";
   const authProvider = usage?.auth_provider ?? "email";
+  const hasPassword = (usage as unknown as Record<string, unknown>)?.has_password !== false;
   const hasPayment = usage?.has_payment_method ?? false;
   const spendLimit = usage?.monthly_spend_limit ?? 0;
 
@@ -197,13 +198,18 @@ export default function SettingsPage() {
               )}
             </div>
             <div className="flex items-center justify-between py-2 border-b border-border">
-              <span className="text-sm text-muted-foreground">Sign-in method</span>
+              <span className="text-sm text-muted-foreground">Sign-in methods</span>
               {loading ? (
-                <Skeleton className="h-5 w-16" />
+                <Skeleton className="h-5 w-24" />
               ) : (
-                <Badge variant="secondary" className="capitalize">
-                  {authProvider === "google" ? "Google" : "Email & Password"}
-                </Badge>
+                <div className="flex gap-1.5">
+                  {hasPassword && (
+                    <Badge variant="secondary">Email & Password</Badge>
+                  )}
+                  {(authProvider === "google" || !hasPassword) && (
+                    <Badge variant="secondary">Google</Badge>
+                  )}
+                </div>
               )}
             </div>
             <div className="flex items-center justify-between py-2 border-b border-border">
@@ -230,7 +236,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Password change — email users only */}
-            {!loading && authProvider !== "google" && (
+            {!loading && hasPassword && (
               <>
                 <Separator />
                 <div>

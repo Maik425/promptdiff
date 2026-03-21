@@ -46,6 +46,7 @@ func (h *Handler) GetUsage(c echo.Context) error {
 		"email":                user.Email,
 		"created_at":           user.CreatedAt.Format(time.RFC3339),
 		"auth_provider":        user.AuthProvider,
+		"has_password":         user.PasswordHash != "",
 		"month":                month,
 		"eval_count":           evalCount,
 		"total_charge_usd":     totalCharge,
