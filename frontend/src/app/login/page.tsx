@@ -28,9 +28,8 @@ function LoginContent() {
 
   // Handle Google OAuth callback
   useEffect(() => {
-    const token = searchParams.get("token");
     const apiKey = searchParams.get("api_key");
-    if (token && apiKey) {
+    if (apiKey) {
       storeApiKey(apiKey);
       toast.success("Signed in with Google");
       router.push("/dashboard/playground");
