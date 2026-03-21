@@ -13,16 +13,15 @@ export default function Icon() {
           background: "linear-gradient(135deg, #7c6aef, #5b4dc7)",
           borderRadius: 7,
           display: "flex",
-          alignItems: "flex-end",
+          alignItems: "center",
           justifyContent: "center",
-          gap: 3,
-          padding: "0 6px 6px 6px",
         }}
       >
-        {/* 3 columns representing model comparison - different heights */}
-        <div style={{ width: 5, height: 12, background: "rgba(255,255,255,0.5)", borderRadius: 2 }} />
-        <div style={{ width: 5, height: 18, background: "rgba(255,255,255,0.85)", borderRadius: 2 }} />
-        <div style={{ width: 5, height: 14, background: "rgba(255,255,255,0.65)", borderRadius: 2 }} />
+        {/* Delta triangle - diff/change symbol */}
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M12 3 L22 20 L2 20 Z" stroke="white" strokeWidth="2.5" strokeLinejoin="round" opacity="0.9" />
+          <line x1="6" y1="15" x2="18" y2="15" stroke="white" strokeWidth="1.5" opacity="0.5" />
+        </svg>
       </div>
     ),
     { ...size }

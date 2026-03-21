@@ -58,7 +58,7 @@ export default function SignupPage() {
         <div className="hidden md:flex flex-col gap-6 p-8">
           <Link href="/" className="flex items-center gap-2 mb-2">
             <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
-              <div className="flex items-end gap-[3px]"><div className="w-[4px] h-[10px] bg-white/50 rounded-sm" /><div className="w-[4px] h-[15px] bg-white/85 rounded-sm" /><div className="w-[4px] h-[12px] bg-white/65 rounded-sm" /></div>
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none"><path d="M12 3 L22 20 L2 20 Z" stroke="white" strokeWidth="2.5" strokeLinejoin="round" opacity="0.9" /><line x1="6" y1="15" x2="18" y2="15" stroke="white" strokeWidth="1.5" opacity="0.5" /></svg>
             </div>
             <span className="font-semibold text-xl text-foreground">
               PromptDiff
@@ -103,7 +103,7 @@ export default function SignupPage() {
           <div className="flex items-center justify-center gap-2 mb-8 md:hidden">
             <Link href="/" className="flex items-center gap-2">
               <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
-                <div className="flex items-end gap-[3px]"><div className="w-[4px] h-[10px] bg-white/50 rounded-sm" /><div className="w-[4px] h-[15px] bg-white/85 rounded-sm" /><div className="w-[4px] h-[12px] bg-white/65 rounded-sm" /></div>
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none"><path d="M12 3 L22 20 L2 20 Z" stroke="white" strokeWidth="2.5" strokeLinejoin="round" opacity="0.9" /><line x1="6" y1="15" x2="18" y2="15" stroke="white" strokeWidth="1.5" opacity="0.5" /></svg>
               </div>
               <span className="font-semibold text-xl text-foreground">
                 PromptDiff

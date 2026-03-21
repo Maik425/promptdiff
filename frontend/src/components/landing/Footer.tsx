@@ -9,7 +9,7 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
-                <div className="flex items-end gap-[2px]"><div className="w-[3px] h-[8px] bg-white/50 rounded-[1px]" /><div className="w-[3px] h-[12px] bg-white/85 rounded-[1px]" /><div className="w-[3px] h-[10px] bg-white/65 rounded-[1px]" /></div>
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><path d="M12 3 L22 20 L2 20 Z" stroke="white" strokeWidth="3" strokeLinejoin="round" opacity="0.9" /><line x1="6" y1="15" x2="18" y2="15" stroke="white" strokeWidth="2" opacity="0.5" /></svg>
               </div>
               <span className="font-semibold text-foreground">PromptDiff</span>
             </div>
