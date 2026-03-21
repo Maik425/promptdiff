@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { clearAuth as clearAuthFn } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { clearAuth as clearAuthFn, getUsage } from "@/lib/api";
 import {
   LayoutDashboard,
   FlaskConical,
@@ -44,16 +45,20 @@ const navItems = [
     href: "/dashboard/settings",
     icon: Settings,
   },
-  {
-    label: "Admin",
-    href: "/dashboard/admin",
-    icon: Shield,
-  },
 ];
+
+const ADMIN_EMAIL = "takano@bizmarq.com";
 
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    getUsage()
+      .then((u) => setIsAdmin(u.email === ADMIN_EMAIL))
+      .catch(() => {});
+  }, []);
 
   const handleSignOut = () => {
     clearAuthFn();
@@ -102,6 +107,24 @@ export function Sidebar() {
             </Link>
           );
         })}
+
+        {isAdmin && (
+          <Link
+            href="/dashboard/admin"
+            className={cn(
+              "flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-all group",
+              pathname === "/dashboard/admin"
+                ? "bg-sidebar-accent text-white font-medium"
+                : "text-sidebar-foreground/60 hover:text-white hover:bg-sidebar-accent/50"
+            )}
+          >
+            <Shield className="w-4 h-4 flex-shrink-0" />
+            <span className="flex-1">Admin</span>
+            {pathname === "/dashboard/admin" && (
+              <ChevronRight className="w-3 h-3 text-white/50" />
+            )}
+          </Link>
+        )}
 
         <div className="pt-4 mt-4 border-t border-sidebar-border">
           <Link
