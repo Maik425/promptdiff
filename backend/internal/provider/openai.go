@@ -155,7 +155,9 @@ func (o *OpenAIProvider) Complete(ctx context.Context, req CompletionRequest) (*
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		result.Error = fmt.Sprintf("HTTP %d: %s", resp.StatusCode, string(raw))
+		// Omit the raw response body to prevent leaking any sensitive context
+		// (Finding 10.2 — sanitize provider error messages).
+		result.Error = fmt.Sprintf("openai: HTTP %d", resp.StatusCode)
 		return result, nil
 	}
 

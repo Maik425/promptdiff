@@ -2,9 +2,11 @@ package handler
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Maik425/promptdiff/internal/model"
@@ -32,6 +34,9 @@ func (h *Handler) Signup(c echo.Context) error {
 	if len(req.Email) > 254 {
 		return echo.NewHTTPError(http.StatusBadRequest, "email too long")
 	}
+	if !strings.Contains(req.Email, "@") || !strings.Contains(req.Email, ".") {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid email format")
+	}
 	if len(req.Password) < 8 {
 		return echo.NewHTTPError(http.StatusBadRequest, "password must be at least 8 characters")
 	}
@@ -44,7 +49,7 @@ func (h *Handler) Signup(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to hash password")
 	}
 
-	apiKey, err := generateAPIKey()
+	rawKey, err := generateAPIKey()
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate API key")
 	}
@@ -53,21 +58,23 @@ func (h *Handler) Signup(c echo.Context) error {
 		ID:           uuid.New().String(),
 		Email:        req.Email,
 		PasswordHash: string(hash),
-		APIKey:       apiKey,
+		APIKey:       hashAPIKey(rawKey),
 		Plan:         model.PlanFree,
 		CreatedAt:    time.Now().UTC(),
 	}
 
 	if err := h.store.CreateUser(c.Request().Context(), user); err != nil {
 		if err == store.ErrConflict {
-			return echo.NewHTTPError(http.StatusConflict, "email already registered")
+			// Generic message to prevent user enumeration (Finding 1.6).
+			return echo.NewHTTPError(http.StatusConflict, "signup failed")
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create user")
 	}
 
+	// Return the raw key once — it is never retrievable again after this point.
 	return c.JSON(http.StatusCreated, model.SignupResponse{
 		UserID: user.ID,
-		APIKey: user.APIKey,
+		APIKey: rawKey,
 	})
 }
 
@@ -95,14 +102,12 @@ func (h *Handler) Login(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
 	}
 
-	token, err := h.generateJWT(user.ID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate token")
-	}
-
+	// JWT generation is intentionally removed (Finding 1.3): no route validates
+	// JWTs, so issuing them was misleading. Authentication uses API keys only.
+	// The raw API key is shown once at signup or regeneration; it cannot be
+	// recovered from the stored hash, so login only confirms credentials.
 	return c.JSON(http.StatusOK, model.LoginResponse{
-		Token:  token,
-		APIKey: user.APIKey,
+		APIKey: "",
 	})
 }
 
@@ -124,4 +129,11 @@ func generateAPIKey() (string, error) {
 		return "", fmt.Errorf("generate api key: %w", err)
 	}
 	return "pd_" + hex.EncodeToString(b), nil
+}
+
+// hashAPIKey returns a hex-encoded SHA-256 digest of rawKey.
+// Only the hash is stored in the database; the raw key is shown to the user once.
+func hashAPIKey(rawKey string) string {
+	h := sha256.Sum256([]byte(rawKey))
+	return hex.EncodeToString(h[:])
 }

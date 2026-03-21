@@ -139,9 +139,11 @@ func (h *Handler) GoogleAuthCallback(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadGateway, "Google did not return an email address")
 	}
 
-	// Prepare a new user record. CreateOrGetOAuthUser will return the existing
-	// user if the email is already registered, ignoring this prepared record.
-	newAPIKey, err := generateAPIKey()
+	// Generate a fresh raw API key for this OAuth session. The hash is stored;
+	// the raw key is passed to the frontend once via redirect.
+	// Regenerating on every OAuth login ensures we can always return a usable
+	// raw key (hashes are not reversible, so we cannot recover prior raw keys).
+	rawKey, err := generateAPIKey()
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate API key")
 	}
@@ -150,7 +152,7 @@ func (h *Handler) GoogleAuthCallback(c echo.Context) error {
 		ID:           uuid.New().String(),
 		Email:        info.Email,
 		PasswordHash: "", // Google users have no password.
-		APIKey:       newAPIKey,
+		APIKey:       hashAPIKey(rawKey),
 		Plan:         model.PlanFree,
 		CreatedAt:    time.Now().UTC(),
 		AuthProvider: model.AuthProviderGoogle,
@@ -161,16 +163,19 @@ func (h *Handler) GoogleAuthCallback(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create or fetch user")
 	}
 
-	jwt, err := h.generateJWT(user.ID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate token")
+	// For returning users the candidate key was not stored (ON CONFLICT DO NOTHING).
+	// Regenerate their key so this session receives a fresh usable raw key.
+	if user.ID != candidate.ID {
+		if err := h.store.RegenerateAPIKey(c.Request().Context(), user.ID, hashAPIKey(rawKey)); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to refresh API key")
+		}
 	}
 
-	// Redirect the browser to the frontend login page with token and api_key as
-	// query parameters. The frontend reads them from the URL and stores them.
+	// Redirect the browser to the frontend login page with the api_key as a
+	// query parameter. The frontend reads it from the URL and stores it.
+	// JWT is not issued (Finding 1.3): no route validates JWTs.
 	redirectParams := url.Values{}
-	redirectParams.Set("token", jwt)
-	redirectParams.Set("api_key", user.APIKey)
+	redirectParams.Set("api_key", rawKey)
 
 	frontendURL := h.cfg.FrontendBaseURL + "/login?" + redirectParams.Encode()
 	return c.Redirect(http.StatusFound, frontendURL)

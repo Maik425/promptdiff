@@ -86,7 +86,11 @@ func run() error {
 	e.HideBanner = true
 	e.HidePort = true
 
-	e.Use(middleware.Logger())
+	// Custom logger format that excludes headers to prevent API keys appearing
+	// in logs when clients pass them as Authorization headers (Finding 10.3).
+	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Format: "${time_rfc3339} ${method} ${uri} ${status} ${latency_human} ${bytes_in}/${bytes_out}\n",
+	}))
 	e.Use(middleware.Recover())
 	e.Use(middleware.BodyLimit("1M")) // Max 1MB request body
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{

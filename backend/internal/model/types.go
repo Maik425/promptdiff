@@ -31,7 +31,10 @@ type User struct {
 	MonthlySpendLimit float64   `json:"monthly_spend_limit_usd"`
 	// AuthProvider is "email" for password auth and "google" for Google OAuth.
 	// It may be empty for rows created before migration 003.
-	AuthProvider      string    `json:"auth_provider,omitempty"`
+	AuthProvider  string `json:"auth_provider,omitempty"`
+	// EmailVerified tracks whether the user has confirmed their email address.
+	// Unverified users receive a reduced free quota as an abuse deterrent.
+	EmailVerified bool `json:"email_verified"`
 }
 
 // TokenUsage holds token counts for a completion.
@@ -135,7 +138,6 @@ type LoginRequest struct {
 
 // LoginResponse is returned after a successful login.
 type LoginResponse struct {
-	Token  string `json:"token"`
 	APIKey string `json:"api_key"`
 }
 

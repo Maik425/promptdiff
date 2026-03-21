@@ -2,6 +2,8 @@
 package middleware
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"net/http"
 	"strings"
 
@@ -30,12 +32,14 @@ func APIKeyAuth(s store.Store) echo.MiddlewareFunc {
 				return echo.NewHTTPError(http.StatusUnauthorized, "invalid Authorization header format")
 			}
 
-			apiKey := strings.TrimSpace(parts[1])
-			if apiKey == "" {
+			rawKey := strings.TrimSpace(parts[1])
+			if rawKey == "" {
 				return echo.NewHTTPError(http.StatusUnauthorized, "empty API key")
 			}
 
-			user, err := s.GetUserByAPIKey(c.Request().Context(), apiKey)
+			// Hash the incoming key before lookup — only SHA-256 digests are
+			// stored in the database (Finding 1.1).
+			user, err := s.GetUserByAPIKey(c.Request().Context(), hashAPIKey(rawKey))
 			if err != nil {
 				if err == store.ErrNotFound {
 					return echo.NewHTTPError(http.StatusUnauthorized, "invalid API key")
@@ -66,4 +70,12 @@ func UserFromContext(c echo.Context) *model.User {
 		return nil
 	}
 	return v.(*model.User)
+}
+
+// hashAPIKey returns a hex-encoded SHA-256 digest of rawKey.
+// Mirrors the helper in the handler package; duplicated here to avoid a
+// circular import between middleware and handler.
+func hashAPIKey(rawKey string) string {
+	h := sha256.Sum256([]byte(rawKey))
+	return hex.EncodeToString(h[:])
 }

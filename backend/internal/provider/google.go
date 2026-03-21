@@ -176,7 +176,9 @@ func (g *GoogleProvider) Complete(ctx context.Context, req CompletionRequest) (*
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		result.Error = fmt.Sprintf("HTTP %d: %s", resp.StatusCode, string(raw))
+		// Omit the raw response body — it may contain the API key from the URL
+		// (Google embeds the key as a query parameter, Finding 10.2).
+		result.Error = fmt.Sprintf("google: HTTP %d", resp.StatusCode)
 		return result, nil
 	}
 

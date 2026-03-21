@@ -64,12 +64,13 @@ func (h *Handler) Compare(c echo.Context) error {
 		monthlySpend = usage.TotalCostUSD
 	}
 
-	// Billing check
+	// Billing check — unverified accounts receive a reduced free quota.
 	allowed, reason := service.CanRunEval(
 		evalCount,
 		user.HasPaymentMethod,
 		monthlySpend,
 		user.MonthlySpendLimit,
+		user.EmailVerified,
 	)
 	if !allowed {
 		return echo.NewHTTPError(http.StatusPaymentRequired, reason)

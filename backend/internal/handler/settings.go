@@ -81,21 +81,22 @@ func (h *Handler) UpdatePassword(c echo.Context) error {
 }
 
 // RegenerateAPIKey handles POST /v1/settings/regenerate-key.
-// Generates a fresh API key, stores it, and returns it to the caller.
-// The old key is immediately invalidated.
+// Generates a fresh API key, stores its SHA-256 hash, and returns the raw key
+// to the caller. The old key is immediately invalidated. The raw key is shown
+// only once and cannot be recovered from the stored hash.
 func (h *Handler) RegenerateAPIKey(c echo.Context) error {
 	userID := mw.UserIDFromContext(c)
 
-	newKey, err := generateAPIKey()
+	rawKey, err := generateAPIKey()
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate API key")
 	}
 
-	if err := h.store.RegenerateAPIKey(c.Request().Context(), userID, newKey); err != nil {
+	if err := h.store.RegenerateAPIKey(c.Request().Context(), userID, hashAPIKey(rawKey)); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update API key")
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{"api_key": newKey})
+	return c.JSON(http.StatusOK, map[string]string{"api_key": rawKey})
 }
 
 // DeleteAccount handles DELETE /v1/settings/account.

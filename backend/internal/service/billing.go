@@ -1,12 +1,16 @@
 // Package service — billing logic for pass-through pricing.
 package service
 
+import "fmt"
+
 // Pricing model: LLM API cost × (1 + Margin) = user charge.
-// Free tier: 100 evals/month, restricted to cheap models only.
+// Free tier: 100 evals/month for verified accounts, 20 for unverified.
+// This acts as an abuse deterrent without requiring email infrastructure.
 
 const (
-	FreeQuota = 100
-	Margin    = 0.40 // 40% markup on LLM API cost
+	FreeQuota         = 100 // monthly eval limit for verified free accounts
+	FreeQuotaUnverified = 20  // reduced quota for unverified accounts (Finding 9.1/9.2)
+	Margin            = 0.40 // 40% markup on LLM API cost
 )
 
 // FreeModels lists model IDs available on the free tier.
@@ -29,11 +33,17 @@ func UserCharge(llmCost float64, monthlyEvalCount int, hasPaymentMethod bool) fl
 
 // CanRunEval checks whether the user can run an eval.
 // Returns (allowed, reason).
-func CanRunEval(monthlyEvalCount int, hasPaymentMethod bool, monthlySpendUSD float64, spendLimitUSD float64) (bool, string) {
+// emailVerified controls which free quota applies: unverified accounts receive
+// a lower limit (FreeQuotaUnverified) as an abuse deterrent (Finding 9.1/9.2).
+func CanRunEval(monthlyEvalCount int, hasPaymentMethod bool, monthlySpendUSD float64, spendLimitUSD float64, emailVerified bool) (bool, string) {
 	// Free tier: within quota
 	if !hasPaymentMethod {
-		if monthlyEvalCount >= FreeQuota {
-			return false, "free quota exceeded (100/month). Add a payment method to continue."
+		quota := FreeQuota
+		if !emailVerified {
+			quota = FreeQuotaUnverified
+		}
+		if monthlyEvalCount >= quota {
+			return false, fmt.Sprintf("free quota exceeded (%d/month). Verify your email or add a payment method to continue.", quota)
 		}
 		return true, "free"
 	}
